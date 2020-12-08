@@ -4,3 +4,5 @@ config:
 modules:
   workshop-environment:
     name: Your Workshop Environment
+  data-cleansing:
+    name: Data Cleansing in OpenShift

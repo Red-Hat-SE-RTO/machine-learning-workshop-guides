@@ -20,3 +20,4 @@ vars:
 modules:
   activate:
   - workshop-environment
+  - data-cleansing
