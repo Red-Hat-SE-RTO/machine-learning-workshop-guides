@@ -6,3 +6,9 @@ modules:
     name: Your Workshop Environment
   data-cleansing:
     name: Data Cleansing in OpenShift
+  model-training:
+    name: Training a Model in OpenShift
+  model-running:
+    name: Running the Model
+  model-updates:
+    name: Updating the Model
