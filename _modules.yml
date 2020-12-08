@@ -1,0 +1,6 @@
+config:
+    renderer: markdown
+
+modules:
+  workshop-environment:
+    name: Your Workshop Environment
