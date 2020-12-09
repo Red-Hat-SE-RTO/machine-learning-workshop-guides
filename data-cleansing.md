@@ -35,21 +35,67 @@ Start by logging into the [OpenShift web console]({{ CONSOLE_URL}}){:target="_bl
 Login using:
 
 * Username: `userXX`
-* Password: `r3dh4t1!`
-
-> **NOTE**: Use of self-signed certificates
->
-> When you access the OpenShift web console]({{ CONSOLE_URL}}) or other URLs via _HTTPS_ protocol, you will see browser warnings
-> like `Your > Connection is not secure` since this workshop uses self-signed certificates (which you should not do in production!).
-> For example, if you're using **Chrome**, you will see the following screen.
->
-> Click on `Advanced` then, you can access the HTTPS page when you click on `Proceed to...`!!!
->
-> ![warning]({% image_path browser_warning.png %})
->
-> Other browsers have similar procedures to accept the security exception.
+* Password: `r3dh4t1!` 
 
 You will see the OpenShift landing page:
 
 ![openshift_landing]({% image_path openshift_landing.png %})
+
+## Open Data Hub deployment
+
+We'll start by deploying an Open Data Hub (ODH) instance. +
+
+Create a project for the notebooks.
+
+```
+oc new-project userXX-notebooks
+oc project user2-notebooks
+```
+
+### Step 2: Deploy ODH
+
+Change your directory to where the installation files are:
+
+```
+cd /opt/app-root/workshop/files
+```
+
+Take a look at the ODH deployment file:
+
+```
+cat 01_odh.yaml
+```
+
+You will see from the *spec* section that it will deploy 3 components:
+
+* Some common files
+* JupyterHub, which will act as a "launcher" for notebook environments.
+* Notebooks images
+
+Let's deploy it!
+
+```
+oc apply -f 01_odh.yaml
+```
+
+Watch the topology view to see that the jupyterhub and jupyterhub-db deployments succeed. The circles should turn dark blue!
+
+*TODO Make a nice picture of the successful deployment for people to look at.*
+
+## Buckets and Bucket Notifications creation
+
+### Connect to JupyterHub
+
+Click on the jupyterhub icon and look for the "Routes" section. Click on the route listed there.
+
+Just click on this link, a new tab will open. Click on the button *Sign in with OpenShift*, and use your OpenTLC credentials to connect.+
+On the first connection, OpenShift will ask to authorize the application to access your username just click *Allow selected permissions*.
+
+### Launch Jupyter
+
+On the *Spawner Options* page select the *s2i-minimal-notebook:3.6* image from the first dropdown (this should be the default image), and click *Spawn* at the bottom.
+
+Your Jupyter environment will take 15-20 seconds to launch.
+
+It will display a _File Explore like_ interface. Click on the *xraylab_notebooks.git* folder, then on the *georgia_covidtracking.ipynb* file, which will launch the notebook.
 
