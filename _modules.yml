@@ -2,10 +2,10 @@ config:
     renderer: markdown
 
 modules:
-  setup-environment:
-    name: Your Workshop Environment
   workshop-environment:
     name: Your Workshop Environment
+  setup-environment:
+    name: Setup  Environment via CodeReady Workspaces
   data-cleansing:
     name: Data Cleansing in OpenShift
   model-training:

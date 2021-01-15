@@ -56,13 +56,12 @@ oc project userXX-notebooks
 Change your directory to where the installation files are:
 
 ```
-cd /opt/app-root/workshop/files
+cd ocp-machine-learning-workshop
 ```
 
 Take a look at the ODH deployment file:
-
 ```
-cat 01_odh.yaml
+01_odh.yaml
 ```
 
 You will see from the *spec* section that it will deploy 3 components:
