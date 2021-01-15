@@ -45,11 +45,10 @@ You will see the OpenShift landing page:
 
 We'll start by deploying an Open Data Hub (ODH) instance. +
 
-Create a project for the notebooks.
+Switch to project for the notebooks.
 
 ```
-oc new-project userXX-notebooks
-oc project user2-notebooks
+oc project userXX-notebooks
 ```
 
 ### Step 2: Deploy ODH
