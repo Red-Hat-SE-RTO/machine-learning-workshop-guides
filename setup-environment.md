@@ -16,17 +16,17 @@
 **Click on  *Login to OpenShift***  
 ![new_terminal.png]({% image_path new_terminal.png %})
 
-*Use the following username and password*
+*Use the following username and password*  
 * username: {{OPENSHIFT_USER_NAME}}
 * password: {{OPENSHIFT_USER_PASSWORD}}
 
 
-**List your projects.**
+**List your projects.**  
 ```
 oc projects
 ```
 
-**Switch to notebook.**
+**Switch to notebook.**  
 ```
 oc project userXX-notebooks
 ```
