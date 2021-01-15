@@ -2,6 +2,8 @@ config:
     renderer: markdown
 
 modules:
+  setup-environment:
+    name: Your Workshop Environment
   workshop-environment:
     name: Your Workshop Environment
   data-cleansing:
