@@ -19,8 +19,8 @@ vars:
 
 modules:
   activate:
-  - setup-environment
   - workshop-environment
+  - setup-environment
   - data-cleansing
   - model-training
   - model-running
