@@ -2,8 +2,9 @@
 
 **Login to the OpenShift Console [CodeReady Workspaces]({{ ECLIPSE_CHE_URL}}){:target="_blank"}.**  
 *Use the following username and password*
-* username: {{OPENSHIFT_USER_NAME}}
-* password: {{CHE_USER_PASSWORD}}
+
+* username: {{OPENSHIFT_USER_NAME}}  
+* password: {{CHE_USER_PASSWORD}}  
  
  **Click on *Git Clone* in your CodeReady Workspace**
  ```
@@ -17,8 +18,9 @@
 ![new_terminal.png]({% image_path new_terminal.png %})
 
 *Use the following username and password*  
-* username: {{OPENSHIFT_USER_NAME}}
-* password: {{OPENSHIFT_USER_PASSWORD}}
+
+* username: {{OPENSHIFT_USER_NAME}}  
+* password: {{OPENSHIFT_USER_PASSWORD}}  
 
 
 **List your projects.**  
