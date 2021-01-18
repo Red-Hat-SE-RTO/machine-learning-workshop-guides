@@ -78,7 +78,7 @@ oc apply -f 01_odh.yaml
 
 Watch the topology view to see that the jupyterhub and jupyterhub-db deployments succeed. The circles should turn dark blue!
 
-*TODO Make a nice picture of the successful deployment for people to look at.*
+![jupyterhub.png]({% jupyterhub.png %})
 
 ## Buckets and Bucket Notifications creation
 
