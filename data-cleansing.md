@@ -80,7 +80,23 @@ Watch the topology view to see that the jupyterhub and jupyterhub-db deployments
 
 ![jupyterhub.png]({% jupyterhub.png %})
 
-## Buckets and Bucket Notifications creation
+## Bucket Storage Access
+Your JupyterHub Notebook  requires an `access_key` and `secret_key` that is found in your openshift project as a secret. The Notebook uses this information to storage data and content that you will during this lab. 
+
+You may access this in the terminal by running the commands below. 
+* list your secrets you should see a secert called `my-storage-keys`.
+```
+oc get secrets -n userXX-notebooks
+```
+
+* Obtain yur access key from secret. 
+```
+oc get secrets -n userXX-notebooks my-storage-keys -o jsonpath='{.data.accesskeys}' | base64 -d
+```
+
+You may access from the UI as seen below. 
+*To-Do add UI instructions*
+
 
 ### Connect to JupyterHub
 
