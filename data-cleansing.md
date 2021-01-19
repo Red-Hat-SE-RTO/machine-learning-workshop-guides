@@ -79,7 +79,7 @@ oc apply -f 01_odh.yaml
 
 Watch the topology view to see that the jupyterhub and jupyterhub-db deployments succeed. The circles should turn dark blue!
 
-![jupyterhub.png]({% jupyterhub.png %})
+![jupyterhub.png]({% image_path jupyterhub.png %})
 
 ## Bucket Storage Access
 Your JupyterHub Notebook  requires an `access_key` and `secret_key` that is found in your openshift project as a secret. The Notebook uses this information to storage data and content that you will during this lab. 
