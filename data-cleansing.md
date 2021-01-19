@@ -111,7 +111,7 @@ You may access from the UI as seen below.
 
 * Using the CodyReady Terminal 
 ```
-oc get route -n user1-notebooks jupyterhub 
+oc get route -n userXX-notebooks jupyterhub 
 ```
 
 * Using the UI 
