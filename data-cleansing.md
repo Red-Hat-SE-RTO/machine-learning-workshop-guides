@@ -109,6 +109,12 @@ You may access from the UI as seen below.
 
 ### Connect to JupyterHub
 
+* Using the CodyReady Terminal 
+```
+oc get route -n user1-notebooks jupyterhub 
+```
+
+* Using the UI 
 Click on the jupyterhub icon and look for the "Routes" section. Click on the route listed there.
 
 Just click on this link, a new tab will open. Click on the button *Sign in with OpenShift*, and use your OpenTLC credentials to connect.+
@@ -118,7 +124,10 @@ On the first connection, OpenShift will ask to authorize the application to acce
 
 On the *Spawner Options* page select the *s2i-minimal-notebook:3.6* image from the first dropdown (this should be the default image), and click *Spawn* at the bottom.
 
+![spawner.png]({% image_path spawner.png %})
+
 Your Jupyter environment will take 15-20 seconds to launch.
 
 It will display a _File Explore like_ interface. Click on the *xraylab_notebooks.git* folder, then on the *georgia_covidtracking.ipynb* file, which will launch the notebook.
 
+![launcher.png]({% image_path launcher.png %})
