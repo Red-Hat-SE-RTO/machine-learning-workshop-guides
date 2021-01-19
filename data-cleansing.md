@@ -65,6 +65,12 @@ Take a look at the ODH deployment file:
 01_odh.yaml
 ```
 
+Patch the deployment jupyterhub-db so the deployment may complete.
+
+```
+oc patch  dc jupyterhub-db -n userXX-notebooks  --type='json' -p='[{"op": "add", "path": "/spec/template/spec/serviceAccount", "value": "postgres" },{"op": "add", "path": "/spec/template/spec/serviceAccountName", "value": "postgres" }]'
+```
+
 You will see from the *spec* section that it will deploy 3 components:
 
 * Some common files
