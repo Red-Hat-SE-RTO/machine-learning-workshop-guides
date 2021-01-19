@@ -60,6 +60,7 @@ cd ocp-machine-learning-workshop
 ```
 
 Take a look at the ODH deployment file:
+
 ```
 01_odh.yaml
 ```
@@ -85,11 +86,13 @@ Your JupyterHub Notebook  requires an `access_key` and `secret_key` that is foun
 
 You may access this in the terminal by running the commands below. 
 * list your secrets you should see a secert called `my-storage-keys`.
+
 ```
 oc get secrets -n userXX-notebooks
 ```
 
 * Obtain yur access key from secret. 
+
 ```
 oc get secrets -n userXX-notebooks my-storage-keys -o jsonpath='{.data.accesskeys}' | base64 -d
 ```
