@@ -4,6 +4,8 @@ config:
 modules:
   workshop-environment:
     name: Your Workshop Environment
+  setup-environment:
+    name: Setup  Environment via CodeReady Workspaces
   data-cleansing:
     name: Data Cleansing in OpenShift
   model-training:

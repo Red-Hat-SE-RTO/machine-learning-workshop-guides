@@ -2,7 +2,7 @@ id: "machinelearning"
 name: "OpenShift Machine Learning Workshop"
 
 content:
-  url: https://raw.githubusercontent.com/msolberg/machine-learning-workshop-guides/main
+  url: https://raw.githubusercontent.com/takinosh/machine-learning-workshop-guides/main
 
 vars:
   ROUTE_SUBDOMAIN:
@@ -20,4 +20,8 @@ vars:
 modules:
   activate:
   - workshop-environment
+  - setup-environment
   - data-cleansing
+  - model-training
+  - model-running
+  - model-updates

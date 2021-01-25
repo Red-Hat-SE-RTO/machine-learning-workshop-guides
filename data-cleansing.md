@@ -45,11 +45,10 @@ You will see the OpenShift landing page:
 
 We'll start by deploying an Open Data Hub (ODH) instance. +
 
-Create a project for the notebooks.
+Switch to project for the notebooks.
 
 ```
-oc new-project userXX-notebooks
-oc project user2-notebooks
+oc project userXX-notebooks
 ```
 
 ### Step 2: Deploy ODH
@@ -57,13 +56,19 @@ oc project user2-notebooks
 Change your directory to where the installation files are:
 
 ```
-cd /opt/app-root/workshop/files
+cd ocp-machine-learning-workshop
 ```
 
 Take a look at the ODH deployment file:
 
 ```
-cat 01_odh.yaml
+01_odh.yaml
+```
+
+Patch the deployment jupyterhub-db so the deployment may complete.
+
+```
+oc patch  dc jupyterhub-db -n userXX-notebooks  --type='json' -p='[{"op": "add", "path": "/spec/template/spec/serviceAccount", "value": "postgres" },{"op": "add", "path": "/spec/template/spec/serviceAccountName", "value": "postgres" }]'
 ```
 
 You will see from the *spec* section that it will deploy 3 components:
@@ -80,12 +85,36 @@ oc apply -f 01_odh.yaml
 
 Watch the topology view to see that the jupyterhub and jupyterhub-db deployments succeed. The circles should turn dark blue!
 
-*TODO Make a nice picture of the successful deployment for people to look at.*
+![jupyterhub.png]({% image_path jupyterhub.png %})
 
-## Buckets and Bucket Notifications creation
+## Bucket Storage Access
+Your JupyterHub Notebook  requires an `access_key` and `secret_key` that is found in your openshift project as a secret. The Notebook uses this information to storage data and content that you will during this lab. 
+
+You may access this in the terminal by running the commands below. 
+* list your secrets you should see a secert called `my-storage-keys`.
+
+```
+oc get secrets -n userXX-notebooks
+```
+
+* Obtain yur access key from secret. 
+
+```
+oc get secrets -n userXX-notebooks my-storage-keys -o jsonpath='{.data.accesskeys}' | base64 -d
+```
+
+You may access from the UI as seen below. 
+*To-Do add UI instructions*
+
 
 ### Connect to JupyterHub
 
+* Using the CodyReady Terminal 
+```
+oc get route -n userXX-notebooks jupyterhub 
+```
+
+* Using the UI 
 Click on the jupyterhub icon and look for the "Routes" section. Click on the route listed there.
 
 Just click on this link, a new tab will open. Click on the button *Sign in with OpenShift*, and use your OpenTLC credentials to connect.+
@@ -95,7 +124,10 @@ On the first connection, OpenShift will ask to authorize the application to acce
 
 On the *Spawner Options* page select the *s2i-minimal-notebook:3.6* image from the first dropdown (this should be the default image), and click *Spawn* at the bottom.
 
+![spawner.png]({% image_path spawner.png %})
+
 Your Jupyter environment will take 15-20 seconds to launch.
 
 It will display a _File Explore like_ interface. Click on the *xraylab_notebooks.git* folder, then on the *georgia_covidtracking.ipynb* file, which will launch the notebook.
 
+![launcher.png]({% image_path launcher.png %})
