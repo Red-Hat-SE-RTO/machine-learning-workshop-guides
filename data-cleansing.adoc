@@ -101,6 +101,129 @@ The Terminal window in CodeReady Workspaces. You can open a terminal window for 
 image::codeready-workspace-terminal.png[codeready-workspace-terminal, 700]
 ====
 
+== Deploy Open Data Hub
+
+We'll be using Open Data Hub to deploy JupyterHub, Ceph Nano, and Spark. The Open Data Hub operator is already installed for you, but you'll need to deploy an instance of it into your project.
+
+To deploy ODH, first open a new brower with the {{ CONSOLE_URL }}[OpenShift web console^]:
+
+image::openshift_login.png[openshift_login, 700]
+
+Login using:
+
+* Username: `{{ USER_ID }}`
+* Password: `{{ OPENSHIFT_USER_PASSWORD }}`
+
+You will see a list of projects to which you have access:
+
+image::openshift_landing.png[openshift_landing, 700]
+
+Open the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^].
+
+To deploy an instance of ODH, click *From Catalog* on the Add page.
+
+image::from-catalog.png[from-catalog, 700]
+
+Type in `Data` in the search box, and click on the *Open Data Hub*:
+
+image::data-hub-operator.png[data-hub-operator, 700]
+
+Click on *Create*. This will bring you to a screen which allows you to customize the components that you'd like to install.
+
+Click on *YAML View*. Replace the YAML in the edit box with the following definition:
+
+[source,yaml,role="copypaste"]
+----
+   # ODH uses the KfDef manifest format to specify what components will be included in the deployment
+   apiVersion: kfdef.apps.kubeflow.org/v1
+   kind: KfDef
+   metadata:
+     # The name of your deployment
+     name: opendatahub
+   # only the components listed in the `KFDef` resource will be deployed:
+   spec:
+     applications:
+       # REQUIRED: This contains all of the common options used by all ODH components
+       - kustomizeConfig:
+           repoRef:
+             name: manifests
+             path: odh-common
+         name: odh-common
+       # Create the SecurityContextConstraint to grant the ceph-nano service account anyuid permissions
+       - kustomizeConfig:
+           repoRef:
+             name: manifests
+             path: ceph/object-storage/scc
+         name: ceph-nano-scc
+       # Deploy ceph-nano for minimal object storage running in a pod
+       - kustomizeConfig:
+           repoRef:
+             name: manifests
+             path: ceph/object-storage/nano
+         name: ceph-nano
+       # Deploy Radanalytics Spark Operator
+       - kustomizeConfig:
+           repoRef:
+             name: manifests
+             path: radanalyticsio/spark/cluster
+         name: radanalyticsio-spark-cluster
+       # Deploy Open Data Hub JupyterHub
+       - kustomizeConfig:
+           parameters:
+             - name: s3_endpoint_url
+               value: "http://ceph-nano-0"
+           repoRef:
+             name: manifests
+             path: jupyterhub/jupyterhub
+         name: jupyterhub
+       # Deploy addtional Open Data Hub Jupyter notebooks
+       - kustomizeConfig:
+           overlays:
+             - additional
+           repoRef:
+             name: manifests
+             path: jupyterhub/notebook-images
+         name: notebook-images
+     # Reference to all of the git repo archives that contain component kustomize manifests
+     repos:
+       # Official Open Data Hub v1.0.0 component manifests repo
+       # This shows that we will be deploying components from an archive of the odh-manifests repo tagged for v1.0.0
+       - name: manifests
+         uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v1.0.0'
+----
+
+image::create-kfdef.png[create-kfdef, 700]
+
+Click *Create*. On the topology view, you should see the Open Data Hub Components being deployed.
+
+image::deployed-odh.png[deployed-odh, 700]
+
+Although your CodeReady workspace is running on the Kubernetes cluster, it’s running with a default restricted _Service Account_ that prevents you from creating most resource types. If you’ve completed other modules, you’re probably already logged in, but let’s login again: click on *Login to OpenShift*, and enter your given credentials:
+
+* Username: `{{ USER_ID }}`
+* Password: `{{ OPENSHIFT_USER_PASSWORD }}`
+
+image::cmd-login.png[login,700]
+
+You should see something like this (the project names may be different):
+
+[source,none]
+----
+Login successful.
+
+You have access to the following projects and can switch between them with 'oc project <projectname>':
+
+  * {{ USER_ID }}-notebooks
+
+Using project "{{ USER_ID }}-notebooks".
+Welcome! See 'oc help' to get started.
+----
+
+[NOTE]
+====
+After you log in using *Login to OpenShift*, the terminal is no longer usable as a regular terminal. You can close the terminal window. You will still be logged in when you open more terminals later!
+====
+
 
 == Buckets and Bucket Notifications creation
 
