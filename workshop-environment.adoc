@@ -1,0 +1,61 @@
+= Workshop Environment
+:experimental:
+
+== First Step: Confirm Your Username!
+
+Look in the box at the top of your screen. Is your username set already? If so it will look like this:
+
+image::alreadyset.png[Set User ID above, 700]
+
+If your username is properly set, then you can move on. **If not, in the above box, enter the user ID you were assigned** like this:
+
+image::setuser.png[Set User ID above, 700]
+
+This will customize the links and copy/paste code for this workshop. If you accidently type the wrong username, just click the green recycle icon to reset it.
+
+
+== Click-to-Copy
+
+You will see various code and command blocks throughout these exercises which can be copy/pasted directly by clicking anywhere on the block of text:
+
+[source,java,role="copypaste"]
+----
+/* A sample Java snippet that you can copy/paste by clicking */
+public class CopyMeDirectly {
+    public static void main(String[] args) {
+        System.out.println("You can copy this whole class with a click!");
+    }
+}
+----
+
+Simply click once and the whole block is copied to your clipboard, ready to be pasted with kbd:[CTRL+V] (or kbd:[Command+V] on Mac OS).
+
+There are also Linux shell commands that can also be copied and pasted into a Terminal in your Development Environment:
+
+[source,sh,role="copypaste"]
+----
+echo "This is a bash shell command that you can copy/paste by clicking"
+----
+
+== The Workshop Environment You Are Using
+
+Your workshop environment consists of several components which have been pre-installed and are ready to use. Depending on which
+parts of the workshop you’re doing, you will use one or more of:
+
+* https://www.openshift.com/[Red Hat OpenShift^] - You’ll use one or more **projects** (Kubernetes namespaces)
+that are your own and are isolated from other workshop students
+* https://developers.redhat.com/products/codeready-workspaces/overview[Red Hat CodeReady Workspaces^] - based on
+*Eclipse Che*, it’s a cloud-based, in-browser IDE (similar to IntelliJ IDEA, VSCode, Eclipse IDE). You’ve been provisioned your
+own personal workspace for use with this workshop. You’ll write, test, and deploy code from here.
+* https://opendatahub.io[Open Data Hub] - A community-based distribution of Data Science tools.
+* https://www.redhat.com/en/technologies/jboss-middleware/amq[Red Hat AMQ Streams^] - streaming data platform
+based on *Apache Kafka*
+* Other open source projects like https://knative.dev[Knative^] (for serverless apps), https://jenkins.io/[Jenkins^] and https://cloud.google.com/tekton/[Tekton^] (CI/CD pipelines), https://prometheus.io[Prometheus^] and https://grafana.com[Grafana^] (monitoring apps), and more.
+
+You’ll be provided clickable URLs throughout the workshop to access the services that have been installed for you.
+
+== How to complete this workshop
+
+Click the "Next >" button at the bottom to advance to the next topic. You can also use the menu on the left to move around the instructions at will.
+
+Good luck, and let’s get started!
