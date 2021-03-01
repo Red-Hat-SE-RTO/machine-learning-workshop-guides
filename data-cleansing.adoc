@@ -189,7 +189,7 @@ Click on *YAML View*. Replace the YAML in the edit box with the following defini
        # Official Open Data Hub v1.0.0 component manifests repo
        # This shows that we will be deploying components from an archive of the odh-manifests repo tagged for v1.0.0
        - name: manifests
-         uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v1.0.0'
+         uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v1.0.2'
 ----
 
 image::create-kfdef.png[create-kfdef, 700]
