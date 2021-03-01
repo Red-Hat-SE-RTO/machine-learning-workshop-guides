@@ -32,7 +32,7 @@ In this first exercise, we'll be deploying a Jupyter Hub instance for our user o
 
 You will be using Red Hat CodeReady Workspaces, an online IDE based on https://www.eclipse.org/che/[Eclipse Che^]. *Changes to files are auto-saved every few seconds*, so you don’t need to explicitly save changes.
 
-To get started, {{ ECLIPSE_CHE_URL }}[access the CodeReady Workspaces instance^] and log in using the username and password you’ve been assigned (e.g. `{{ USER_ID }}/{{ CHE_USER_PASSWORD }}`):
+To get started, {{ CHE_URL }}[access the CodeReady Workspaces instance^] and log in using the username and password you’ve been assigned (e.g. `{{ USER_ID }}/{{ CHE_USER_PASSWORD }}`):
 
 image::che-login.png[cdw, 700]
 
@@ -236,7 +236,19 @@ On the first connection, OpenShift will ask to authorize the application to acce
 
 === Launch Jupyter
 
-On the *Spawner Options* page select the *s2i-minimal-notebook:3.6* image from the first dropdown (this should be the default image), and click *Spawn* at the bottom.
+Once you log into JupyterHub, you'll be asked to enter your S3 credentials. When we deployed Open Data Hub, we asked it to provision an instance of "ceph-nano" for us to use. The credentials for "ceph-nano" are stored in our namespace in a Kubernetes Secret.
+
+To find these values, return to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^]. Click on *Secrets* on the left navigation. Then look for *ceph-nano-credentials* on the list of secrets and click on it. Scroll to the "Data" section and select *Reveal Values*. 
+
+image::ceph-nano-secret.png[ceph-nano-secret,700]
+
+Copy and paste the Key ID and Access Key into the fields the JupyterHub UI.
+
+image::aws-credentials.png[aws-credentials,700]
+
+On the *Spawner Options* page select the *s2i-scipy-notebook:v0.0.2* image from the first dropdown and click *Start* at the bottom.
+
+image::spawner-options.png[spawner-options,700]
 
 Your Jupyter environment will take 15-20 seconds to launch.
 
