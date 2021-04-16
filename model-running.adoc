@@ -1,9 +1,237 @@
-== Running a Model in OpenShift.
+= Running a Model in OpenShift.
+
+== Overview
 
 Now that we have a trained model, we can go ahead and deploy our application and start feeding it data. If we have trained our model properly, we should get fairly accurate predictions about the data we are feeding it.
 
-Run the app and see what happens...
+In this section, we'll be building out a data pipeline that will analyze incoming Xray images, make an assessement of the risk of pneumonia, and optionally anonymize some images based on the certainty of this assessment.
 
-Sometimes, the model does not end up being as accurate as we would like. This could be for a number of reasons. Today, the reason is that the size of the training set was insufficient. 
+This pipeline uses several tools and features. Here's a high level overview of the tasks we'll be completing:
 
-We will need to go back and retrain our model with a large set of data, which will give us an even more accurate model.
+ * Deploy a minimal Kafka Cluster and create a Kafka Topic with the AMQ Streams operator.
+
+* Create object buckets in OpenShift Container Storage (using the Rados Gateway), and configure Bucket notifications to the Kafka topic.
+
+* Create a Serverless Service and a KafkaSource listener to process events from the Kafka topic.
+
+* Create Grafana Data Sources and Dashboards to monitor our pipeline.
+
+== Deploying AMQ Streams
+
+The Operator for AMQ Streams has already been installed in this cluster.
+
+== Expose the S3 endpoint:
+
+----
+oc expose svc/ceph-nano
+----
+
+== Deploying Config Maps
+
+The data pipeline we're deploying requires some shared configuration in our namespace.
+
+To create the config maps, start by navigating to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^]. Click on "Config Maps" and Select "Create Config Map" in the top right corner.
+
+[source,yaml,role="copypaste"]
+----
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: buckets-config
+data:
+  bucket-base-name: 'bucket-base-{{ USER_ID }}'
+  bucket-source: 'https://s3.us-east-1.amazonaws.com/com.redhat.csds.guimou.xray-source'
+----
+
+Click on Create.
+
+Then click on "Create Config Map" again to create a second config map.
+
+
+#TODO: Fix the URLs
+
+[source,yaml,role="copypaste"]
+----
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-point
+data:
+  url-external: 'ceph-nano-{{ USER_ID }}-notebooks.{{ ROUTE_SUBDOMAIN }}' # No trailing /
+  url: 'http://ceph-nano.svc.cluster.local' # No trailing /
+----
+
+Finally, create one more config map to configure the database host:
+
+[source,yaml,role="copypaste"]
+----
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-host
+data:
+  url: xraylabdb
+----
+
+== Deploying the Database
+
+This database will hold some information on the images being uploaded, processed, and anonymized. This is basically their names, the model version with which they are analyzed, and a timestamp.
+All these information will be used on our Grafana Dashboard that displays last ten images from each category.
+
+We'll be using a MariaDB database for this. To deploy the database, click on +Add on the left menu from the console view. Click on Database. Select "MariaDB (Ephemeral)" and then click "Instantiate Template".
+
+Replace the following values:
+
+Database Service Name: xraylabdb
+Username: xraylab
+Password: xraylab
+Root Password: xraylab
+Database Name: xraylabdb
+
+Wait for the database to roll out.
+
+=== Database configuration
+
+We now have a database and a schema, but we must initialize it with some tables. +
+To configure the database, follow these steps.
+
+.Connect to the database pod
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+oc rsh $(oc get pods | grep xraylabdb | grep Running | awk '{print $1}')
+----
+
+Your Terminal prompt is now the one from the database Pod! It should display:
+[source,bash,subs="{markup-in-source}"]
+----
+sh-4.2$
+----
+
+.Connect to MariaDB
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+mysql -u root
+----
+
+Your Terminal prompt is now the one from the MySQL engine! Inception...
+
+.Select the xraylabdb database
+[source,sql,subs="{markup-in-source}",role=execute]
+----
+USE xraylabdb;
+----
+
+For the following commands, you can copy/paste all lines at once in the mysql prompt. 
+
+.Initialize tables
+[source,sql,subs="{markup-in-source}",role=execute]
+----
+DROP TABLE images_uploaded;
+DROP TABLE images_processed;
+DROP TABLE images_anonymized;
+
+CREATE TABLE images_uploaded(time TIMESTAMP, name VARCHAR(255));
+CREATE TABLE images_processed(time TIMESTAMP, name VARCHAR(255), model VARCHAR(10), label VARCHAR(20));
+CREATE TABLE images_anonymized(time TIMESTAMP, name VARCHAR(255));
+
+INSERT INTO images_uploaded(time,name) SELECT CURRENT_TIMESTAMP(), '';
+INSERT INTO images_processed(time,name,model,label) SELECT CURRENT_TIMESTAMP(), '', '','';
+INSERT INTO images_anonymized(time,name) SELECT CURRENT_TIMESTAMP(), '';
+----
+
+.Exit mysql prompt
+[source,sql,subs="{markup-in-source}",role=execute]
+----
+exit;
+----
+
+Your Terminal prompt is now the one from the database Pod!
+
+.Exit database pod
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+exit
+----
+
+== Create Image Streams
+
+To create the image streams, click on the + in the top right corner.
+
+Add the following YAML:
+
+[source,yaml,role="copypaste"]
+----
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: risk-assessment
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: 'quay.io/guimou/xraylab-risk-assessment:rhtr_v1.4'
+      importPolicy: {}
+      referencePolicy:
+        type: Source
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: image-generator
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: 'quay.io/guimou/xraylab-image-generator:rhtr_v1.4'
+      importPolicy: {}
+      referencePolicy:
+        type: Source
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: image-server
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: 'quay.io/guimou/xraylab-image-server:rhtr_v1.4'
+      importPolicy: {}
+      referencePolicy:
+        type: Source
+----
+
+== Create the Kafka Cluster and Topic
+
+Let's create a **Kafka cluster**. Click *+Add* on the left, on the _From Catalog_ box on the project overview:
+
+image::kafka-catalog.png[kafka, 700]
+
+Type in `kafka` in the search box, and click on the *Kafka*:
+
+image::kafka-create.png[kafka, 700]
+
+Click on *Create* and you will enter YAML editor that defines a *Kafka* Cluster. Keep the all values as-is then click on *Create* on the botton:
+
+image::kafka-create-detail.png[kafka, 700]
+
+Next, we will create Kafka _Topic_. Click _Add > From Catalog_ again, type in `kafka topic` in the search box, and click on the *Kafka Topic*:
+
+image::kafka-topic-catalog.png[kafka, 700]
+
+Click on *Create* and you will enter YAML editor that defines a *KafkaTopic* object. Change the name to `xray-images` as shown then click on *Create* on the bottom.
+
+
