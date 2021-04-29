@@ -44,9 +44,6 @@ parts of the workshop you’re doing, you will use one or more of:
 
 * https://www.openshift.com/[Red Hat OpenShift^] - You’ll use one or more **projects** (Kubernetes namespaces)
 that are your own and are isolated from other workshop students
-* https://developers.redhat.com/products/codeready-workspaces/overview[Red Hat CodeReady Workspaces^] - based on
-*Eclipse Che*, it’s a cloud-based, in-browser IDE (similar to IntelliJ IDEA, VSCode, Eclipse IDE). You’ve been provisioned your
-own personal workspace for use with this workshop. You’ll write, test, and deploy code from here.
 * https://opendatahub.io[Open Data Hub] - A community-based distribution of Data Science tools.
 * https://www.redhat.com/en/technologies/jboss-middleware/amq[Red Hat AMQ Streams^] - streaming data platform
 based on *Apache Kafka*
