@@ -8,5 +8,36 @@ With the help of Tensor Flow, training becomes a pretty straight forward process
 
 Once we have a trained model, we need to verify that it is able to accurately predict the nature of a new object. The goal is to have a distinct separation on a graph between the different groups of objects.
 
-Now that we have a model that we are satisfied with, we can export the model for use in our application.
+=== Downloading our training data
+
+We already have the notebook for training our model downloaded as a part of the git repository that we downloaded in the last section, but we don't have the images that we'll need to train our model. Navigate back to the terminal window and run the following command to download the images.
+
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs/notebooks/ && wget http://people.redhat.com/msolberg/chest_xray.tar.gz
+----
+
+The dataset is large and may take up to five minutes to download. These images are a smaller set of a much larger collection of X-Ray images available from kaggle (https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia).
+
+To unpack the data, run the following command in the terminal:
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs/notebooks/ && tar zfxv chest_xray.tar.gz
+----
+
+You'll see a list of the files in the data set scroll by.
+
+=== Train the model.
+
+We'll be running another notebook to train the model on the data we've downloaded. Navigate to back to the juypterhub notebooks tab and click on the "x-ray-predict-pneumonia-keras-training.ipynb" link to open the training notebook.
+
+Run through the notebook, using the "Run" button on the main toolbar:
+
+image::jupyter-toolbar.png[jupyter-toolbar,700]
+
+It will take a while to train the model in our environment, as we don't have access to GPUs.
+
+The final step in the model training notebook will tell us the accuracy of the model that we've created. Once we've trained the model, we're ready to move on to deploying the model.
 
