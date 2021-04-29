@@ -10,27 +10,53 @@ This pipeline uses several tools and features. Here's a high level overview of t
 
  * Deploy a minimal Kafka Cluster and create a Kafka Topic with the AMQ Streams operator.
 
-* Create object buckets in OpenShift Container Storage (using the Rados Gateway), and configure Bucket notifications to the Kafka topic.
+* Create object buckets in S3.
 
 * Create a Serverless Service and a KafkaSource listener to process events from the Kafka topic.
 
 * Create Grafana Data Sources and Dashboards to monitor our pipeline.
 
-== Deploying AMQ Streams
 
-The Operator for AMQ Streams has already been installed in this cluster.
+== Log into OpenShift
 
-== Expose the S3 endpoint:
+We'll start by logging our terminal session in Jupyterhub into OpenShift so that we can use the OpenShift cli, 'oc'. For more information on the OpenShift CLI, see https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html.
 
+To log into OpenShift, run the following command in the terminal.
+
+[source,sh,role="copypaste"]
 ----
-oc expose svc/ceph-nano
+oc login
 ----
 
-== Deploying Config Maps
+You should see something like this (the project names may be different):
+
+[source,none]
+----
+Login successful.
+
+You have access to the following projects and can switch between them with 'oc project <projectname>':
+
+  * {{ USER_ID }}-notebooks
+
+Using project "{{ USER_ID }}-notebooks".
+Welcome! See 'oc help' to get started.
+----
+
+We'll come back to the OpenShift CLI later on when we get ready to deploy our applications.
+
+== Deploy the Infrastructure for our model
+
+Next, we'll deploy the infrastructure that we need for our lab.
+
+=== Deploying Config Maps
 
 The data pipeline we're deploying requires some shared configuration in our namespace.
 
 To create the config maps, start by navigating to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^]. Click on "Config Maps" and Select "Create Config Map" in the top right corner.
+
+image::create-configmap.png[create-configmap, 700]
+
+Delete the contents of the window and paste the following
 
 [source,yaml,role="copypaste"]
 ----
@@ -40,16 +66,13 @@ kind: ConfigMap
 metadata:
   name: buckets-config
 data:
-  bucket-base-name: 'bucket-base-{{ USER_ID }}'
+  bucket-base-name: 'images'
   bucket-source: 'https://s3.us-east-1.amazonaws.com/com.redhat.csds.guimou.xray-source'
 ----
 
 Click on Create.
 
 Then click on "Create Config Map" again to create a second config map.
-
-
-#TODO: Fix the URLs
 
 [source,yaml,role="copypaste"]
 ----
@@ -91,20 +114,23 @@ Password: xraylab
 Root Password: xraylab
 Database Name: xraylabdb
 
-Wait for the database to roll out.
+image::instantiate-mariadb.png[instantiate-mariadb, 700]
+
+Wait for the database to roll out. You should see the circles in the topology turn dark blue.
+
+image::topology-xraylabdb.png[topology-xraylabdb, 700]
 
 === Database configuration
 
-We now have a database and a schema, but we must initialize it with some tables. +
-To configure the database, follow these steps.
+We now have a database and a schema, but we must initialize it with some tables. To configure the database, follow these steps.
 
-.Connect to the database pod
+Connect to the database pod by running the following commands in the Jupyterhub terminal window:
 [source,bash,subs="{markup-in-source}",role=execute]
 ----
 oc rsh $(oc get pods | grep xraylabdb | grep Running | awk '{print $1}')
 ----
 
-Your Terminal prompt is now the one from the database Pod! It should display:
+Your Terminal prompt is now the one from the database Pod. It should display:
 [source,bash,subs="{markup-in-source}"]
 ----
 sh-4.2$
@@ -116,7 +142,7 @@ sh-4.2$
 mysql -u root
 ----
 
-Your Terminal prompt is now the one from the MySQL engine! Inception...
+Your Terminal prompt is now the one from the MySQL engine.
 
 .Select the xraylabdb database
 [source,sql,subs="{markup-in-source}",role=execute]
@@ -156,77 +182,19 @@ Your Terminal prompt is now the one from the database Pod!
 exit
 ----
 
-== Create Image Streams
+=== Create the Kafka Cluster and Topic
 
-To create the image streams, click on the + in the top right corner.
-
-Add the following YAML:
-
-[source,yaml,role="copypaste"]
-----
----
-apiVersion: image.openshift.io/v1
-kind: ImageStream
-metadata:
-  name: risk-assessment
-spec:
-  lookupPolicy:
-    local: true
-  tags:
-    - name: latest
-      from:
-        kind: DockerImage
-        name: 'quay.io/guimou/xraylab-risk-assessment:rhtr_v1.4'
-      importPolicy: {}
-      referencePolicy:
-        type: Source
----
-apiVersion: image.openshift.io/v1
-kind: ImageStream
-metadata:
-  name: image-generator
-spec:
-  lookupPolicy:
-    local: true
-  tags:
-    - name: latest
-      from:
-        kind: DockerImage
-        name: 'quay.io/guimou/xraylab-image-generator:rhtr_v1.4'
-      importPolicy: {}
-      referencePolicy:
-        type: Source
----
-apiVersion: image.openshift.io/v1
-kind: ImageStream
-metadata:
-  name: image-server
-spec:
-  lookupPolicy:
-    local: true
-  tags:
-    - name: latest
-      from:
-        kind: DockerImage
-        name: 'quay.io/guimou/xraylab-image-server:rhtr_v1.4'
-      importPolicy: {}
-      referencePolicy:
-        type: Source
-----
-
-== Create the Kafka Cluster and Topic
-
-Let's create a **Kafka cluster**. Click *+Add* on the left, on the _From Catalog_ box on the project overview:
-
-image::kafka-catalog.png[kafka, 700]
+Let's create a **Kafka cluster**. Click *+Add* on the left in the OpenShift topology view, and on the _From Catalog_ box on the project overview:
 
 Type in `kafka` in the search box, and click on the *Kafka*:
 
-image::kafka-create.png[kafka, 700]
+image::kafka-catalog.png[kafka-catalog, 700]
 
-Click on *Create* and you will enter YAML editor that defines a *Kafka* Cluster. Keep the all values as-is then click on *Create* on the botton:
+Click on *Create* and you will enter YAML editor that defines a *Kafka* Cluster. Keep the all values as-is then click on *Create* on the bottom.
 
-image::kafka-create-detail.png[kafka, 700]
+The zookeeper and kafka clusters will roll out in the Topology view.
+
+image::topology-kafka.png[topology-kafka, 700]
 
 Next, we will create Kafka _Topic_. Click _Add > From Catalog_ again, type in `kafka topic` in the search box, and click on the *Kafka Topic*:
 
@@ -234,4 +202,62 @@ image::kafka-topic-catalog.png[kafka, 700]
 
 Click on *Create* and you will enter YAML editor that defines a *KafkaTopic* object. Change the name to `xray-images` as shown then click on *Create* on the bottom.
 
+image::create-kafka-topic.png[create-kafka-topic, 700]
 
+The Kafka topic will not display on the OpenShift topology.
+
+=== Configure the S3 buckets.
+
+We'll run a notebook to configure the S3 buckets that our application would use. This notebook (as well as our application) uses the "boto3" library for Python to configure the buckets. We'll need to install boto3 in our Jupyterhub instance by running the following commands in our terminal:
+
+[source,sh,role="copypaste"]
+----
+pip install boto3
+----
+
+You should see output similar to the following:
+
+[source,sh,role="copypaste"]
+----
+Collecting boto3
+  Downloading boto3-1.17.61-py2.py3-none-any.whl (131 kB)
+     |████████████████████████████████| 131 kB 6.2 MB/s
+Requirement already satisfied: jmespath<1.0.0,>=0.7.1 in /opt/app-root/lib/python3.6/site-packages (from boto3) (0.10.0)
+Collecting botocore<1.21.0,>=1.20.61
+  Downloading botocore-1.20.61-py2.py3-none-any.whl (7.5 MB)
+     |████████████████████████████████| 7.5 MB 15.3 MB/s
+Collecting s3transfer<0.5.0,>=0.4.0
+  Downloading s3transfer-0.4.2-py2.py3-none-any.whl (79 kB)
+     |████████████████████████████████| 79 kB 85.1 MB/s
+Requirement already satisfied: python-dateutil<3.0.0,>=2.1 in /opt/app-root/lib/python3.6/site-packages (from botocore<1.21.0,>=1.20.61->boto3) (2.8.1)
+Requirement already satisfied: urllib3<1.27,>=1.25.4 in /opt/app-root/lib/python3.6/site-packages (from botocore<1.21.0,>=1.20.61->boto3) (1.25.11)
+Requirement already satisfied: six>=1.5 in /opt/app-root/lib/python3.6/site-packages (from python-dateutil<3.0.0,>=2.1->botocore<1.21.0,>=1.20.61->boto3) (1.15.0)
+Installing collected packages: botocore, s3transfer, boto3
+  Attempting uninstall: botocore
+    Found existing installation: botocore 1.17.44
+    Uninstalling botocore-1.17.44:
+      Successfully uninstalled botocore-1.17.44
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+aiobotocore 1.1.2 requires botocore<1.17.45,>=1.17.44, but you have botocore 1.20.61 which is incompatible.
+Successfully installed boto3-1.17.61 botocore-1.20.61 s3transfer-0.4.2
+----
+
+Now that we've installed the module, navigate back to the jupyterhub notebooks and click on the "create_notifications.ipynb" notebook to launch it.
+
+Walk through the notebook to create the buckets:
+
+image::bucket-list.png[bucket-list, 700]
+
+== Deploy the Model
+
+Next we'll deploy the three services which will do the following steps in the pipeline:
+
+1) Grab an X-Ray image and drop it into the incoming bucket.
+2) Analyze the incoming image and tag it.
+3) Display a processed image.
+
+=== Deploy the Image Generator
+
+=== Deploy the Risk Assessment Service
+
+=== Deploy the Image Server
