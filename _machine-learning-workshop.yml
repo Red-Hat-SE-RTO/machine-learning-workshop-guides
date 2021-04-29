@@ -21,4 +21,5 @@ modules:
   activate:
   - workshop-environment
   - data-cleansing
+  - model-training
   - model-running
