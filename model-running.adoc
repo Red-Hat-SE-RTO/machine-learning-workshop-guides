@@ -121,7 +121,8 @@ INSERT INTO images_processed(time,name,model,label) SELECT CURRENT_TIMESTAMP(), 
 INSERT INTO images_anonymized(time,name) SELECT CURRENT_TIMESTAMP(), '';
 ----
 
-.Exit mysql prompt
+Exit mysql prompt
+
 [source,sh,role="copypaste"]
 ----
 exit;
@@ -421,6 +422,6 @@ spec:
 
 You can see a new connection between Kafka and our *risk-assessment* service.
 
-image::knative-risk-assessment[knative-risk-assessment, 700]
+image::knative-risk-assessment.png[knative-risk-assessment, 700]
 
 The three services that we need have now been deployed and the pipeline is running. In the next section, we'll add some visibility to the operation of the pipeline with a Grafana dashboard.
