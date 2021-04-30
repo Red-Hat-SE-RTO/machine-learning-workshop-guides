@@ -1,4 +1,4 @@
-== Model Traning in OpenShift.
+== Model Training in OpenShift.
 
 In order for your application to successfully make predictions, it will require a properly trained model. In this section we will be training the model that the application will be using later.
 
