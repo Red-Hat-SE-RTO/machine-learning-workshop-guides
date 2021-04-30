@@ -48,57 +48,6 @@ We'll come back to the OpenShift CLI later on when we get ready to deploy our ap
 
 Next, we'll deploy the infrastructure that we need for our lab.
 
-=== Deploying Config Maps
-
-The data pipeline we're deploying requires some shared configuration in our namespace.
-
-To create the config maps, start by navigating to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^]. Click on "Config Maps" and Select "Create Config Map" in the top right corner.
-
-image::create-configmap.png[create-configmap, 700]
-
-Delete the contents of the window and paste the following
-
-[source,yaml,role="copypaste"]
-----
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: buckets-config
-data:
-  bucket-base-name: 'images'
-  bucket-source: 'https://s3.us-east-1.amazonaws.com/com.redhat.csds.guimou.xray-source'
-----
-
-Click on Create.
-
-Then click on "Create Config Map" again to create a second config map.
-
-[source,yaml,role="copypaste"]
-----
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: service-point
-data:
-  url-external: 'ceph-nano-{{ USER_ID }}-notebooks.{{ ROUTE_SUBDOMAIN }}' # No trailing /
-  url: 'http://ceph-nano.svc.cluster.local' # No trailing /
-----
-
-Finally, create one more config map to configure the database host:
-
-[source,yaml,role="copypaste"]
-----
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: database-host
-data:
-  url: xraylabdb
-----
-
 == Deploying the Database
 
 This database will hold some information on the images being uploaded, processed, and anonymized. This is basically their names, the model version with which they are analyzed, and a timestamp.
@@ -125,7 +74,8 @@ image::topology-xraylabdb.png[topology-xraylabdb, 700]
 We now have a database and a schema, but we must initialize it with some tables. To configure the database, follow these steps.
 
 Connect to the database pod by running the following commands in the Jupyterhub terminal window:
-[source,bash,subs="{markup-in-source}",role=execute]
+
+[source,sh,role="copypaste"]
 ----
 oc rsh $(oc get pods | grep xraylabdb | grep Running | awk '{print $1}')
 ----
@@ -137,7 +87,7 @@ sh-4.2$
 ----
 
 .Connect to MariaDB
-[source,bash,subs="{markup-in-source}",role=execute]
+[source,sh,role="copypaste"]
 ----
 mysql -u root
 ----
@@ -145,7 +95,7 @@ mysql -u root
 Your Terminal prompt is now the one from the MySQL engine.
 
 .Select the xraylabdb database
-[source,sql,subs="{markup-in-source}",role=execute]
+[source,sh,role="copypaste"]
 ----
 USE xraylabdb;
 ----
@@ -153,7 +103,7 @@ USE xraylabdb;
 For the following commands, you can copy/paste all lines at once in the mysql prompt. 
 
 .Initialize tables
-[source,sql,subs="{markup-in-source}",role=execute]
+[source,sh,role="copypaste"]
 ----
 DROP TABLE images_uploaded;
 DROP TABLE images_processed;
@@ -169,7 +119,7 @@ INSERT INTO images_anonymized(time,name) SELECT CURRENT_TIMESTAMP(), '';
 ----
 
 .Exit mysql prompt
-[source,sql,subs="{markup-in-source}",role=execute]
+[source,sh,role="copypaste"]
 ----
 exit;
 ----
@@ -177,7 +127,7 @@ exit;
 Your Terminal prompt is now the one from the database Pod!
 
 .Exit database pod
-[source,bash,subs="{markup-in-source}",role=execute]
+[source,sh,role="copypaste"]
 ----
 exit
 ----
@@ -258,6 +208,135 @@ Next we'll deploy the three services which will do the following steps in the pi
 
 === Deploy the Image Generator
 
+To deploy the Image Generator, we'll be building a container image from source. To build the container image, we'll use the "oc new-app" command. Enter the following command in the terminal tab:
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app . --strategy=docker --name=image-generator
+----
+
+You should see output similar to the following:
+
+[source,sh,role="copypaste"]
+----
+--> Found Docker image 81c4003 (2 days old) from Docker Hub for "python:3.7"
+
+    * An image stream tag will be created as "python:3.7" that will track the source image
+    * A Docker build using source code from https://github.com/msolberg/machine-learning-workshop-labs/#main will be created
+      * The resulting image will be pushed to image stream tag "image-generator:latest"
+      * Every time "python:3.7" changes a new build will be triggered
+    * This image will be deployed in deployment config "image-generator"
+    * The image does not expose any ports - if you want to load balance or send traffic to this component
+      you will need to create a service with 'expose dc/image-generator --port=[port]' later
+    * WARNING: Image "python:3.7" runs as the 'root' user which may not be permitted by your cluster administrator
+
+--> Creating resources ...
+    imagestream.image.openshift.io "python" created
+    imagestream.image.openshift.io "image-generator" created
+    buildconfig.build.openshift.io "image-generator" created
+    deploymentconfig.apps.openshift.io "image-generator" created
+--> Success
+    Build scheduled, use 'oc logs -f bc/image-generator' to track its progress.
+    Run 'oc status' to view your app.
+----
+
+Then, start a build from the local directory with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc start-build image-generator --from-dir=.
+----
+
+You should can follow the progress of the build with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc logs -f bc/image-generator
+----
+
+You should see the Docker build running in the container. Once the build completes, switch over to the topology view to see the container deployment.
+
+image::image-generator-failed.png[image-generator-failed, 700]
+
+The icon for the image-generator deployment will cycle from blue to yellow to red, indicating that the deployment has failed. To determine the cause of the failure, click on the deployment icon, and click "view logs" next to the crashlooping pod.
+
+image::image-generator-failed-dc.png[image-generator-failed-dc, 700]
+
+You'll see that the pod is failing because it can't find the access key for the S3 endpoint:
+
+[source,sh,role="copypaste"]
+----
+botocore.exceptions.NoCredentialsError: Unable to locate credentials
+----
+
+To resolve this, we'll need to add the ceph-nano-credentials secret from the project to the deployment configuration. Go back to the topology view, click on the deployment, and select "Edit DeploymentConfig" from the Actions menu.
+
+Click on the "Environment" tab, and select "Add all from ConfigMap or Secret".
+
+image::image-generator-dc-env.png[image-generator-dc-env, 700]
+
+Click on Select a resource, and select "ceph-nano-credentials" from the menu.
+
+image::image-generator-dc-env-add.png[image-generator-dc-env-add, 700]
+
+Then click "Save" at the bottom of the pane to update the deployment configuration. The deployment will redeploy the new pods on the topology view and it should go to blue.
+
 === Deploy the Risk Assessment Service
 
+To deploy the Risk Assessment Service, we'll be building another container image from source. To build the container image, we'll use the "oc new-app" command, as in the last example.. Enter the following command in the terminal tab:
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs/services/risk-assessment && oc new-app . --strategy=docker --name=risk-assessment
+----
+
+You should see output similar to the previous example.
+
+Then, start a build from the local directory with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc start-build risk-assessment --from-dir=.
+----
+
+You should can follow the progress of the build with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc logs -f bc/risk-assessment
+----
+
+You should see the Docker build running in the container. Once the build completes, switch over to the topology view to see the container deployment.
+
+As in the previous example, the deployment will fail as the application is unable to connect to the S3 endpoint. Add the ceph-nano-credentials secret to the deployment configuration using the same steps we used with the image generator.
+
 === Deploy the Image Server
+
+Finally, to deploy the Image Server, we'll be building another container image from source. To build the container image, we'll use the "oc new-app" command, as in the last example. Enter the following command in the terminal tab:
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs/services/image-server && oc new-app . --strategy=docker --name=image-server
+----
+
+You should see output similar to the previous example.
+
+Then, start a build from the local directory with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc start-build image-server --from-dir=.
+----
+
+You should can follow the progress of the build with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc logs -f bc/image-server
+----
+
+You should see the Docker build running in the container. Once the build completes, switch over to the topology view to see the container deployment.
+
+The Image Server doesn't need credentials to view the S3 bucket, as the bucket has been marked as public. The deployment will succeed without the secret.
+
+The three services that we need have now been deployed and the pipeline is running. In the next section, we'll add some visibility to the operation of the pipeline with a Grafana dashboard.
