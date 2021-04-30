@@ -95,6 +95,28 @@ Click on *YAML View*. Replace the YAML in the edit box with the following defini
              name: manifests
              path: ceph/object-storage/nano
          name: ceph-nano
+       # Deploy Open Data Hub Grafana
+       - kustomizeConfig:
+           repoRef:
+            name: manifests
+            path: grafana/cluster
+         name: grafana-cluster
+       - kustomizeConfig:
+           repoRef:
+            name: manifests
+            path: grafana/grafana
+         name: grafana-instance
+       # Deploy Open Data Hub Prometheus
+       - kustomizeConfig:
+           repoRef:
+             name: manifests
+             path: prometheus/cluster
+         name: prometheus-cluster
+       - kustomizeConfig:
+           repoRef:
+             name: manifests
+             path: prometheus/operator
+         name: prometheus-operator
        # Deploy Open Data Hub JupyterHub
        - kustomizeConfig:
            parameters:
