@@ -247,7 +247,7 @@ Then, start a build from the local directory with the following command:
 oc start-build image-generator --from-dir=.
 ----
 
-You should can follow the progress of the build with the following command:
+You can follow the progress of the build with the following command:
 
 [source,sh,role="copypaste"]
 ----
@@ -299,7 +299,7 @@ Then, start a build from the local directory with the following command:
 oc start-build risk-assessment --from-dir=.
 ----
 
-You should can follow the progress of the build with the following command:
+You can follow the progress of the build with the following command:
 
 [source,sh,role="copypaste"]
 ----
@@ -328,7 +328,7 @@ Then, start a build from the local directory with the following command:
 oc start-build image-server --from-dir=.
 ----
 
-You should can follow the progress of the build with the following command:
+You can follow the progress of the build with the following command:
 
 [source,sh,role="copypaste"]
 ----
