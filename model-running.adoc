@@ -1,9 +1,427 @@
-== Running a Model in OpenShift.
+= Running a Model in OpenShift.
+
+== Overview
 
 Now that we have a trained model, we can go ahead and deploy our application and start feeding it data. If we have trained our model properly, we should get fairly accurate predictions about the data we are feeding it.
 
-Run the app and see what happens...
+In this section, we'll be building out a data pipeline that will analyze incoming Xray images, make an assessement of the risk of pneumonia, and optionally anonymize some images based on the certainty of this assessment.
 
-Sometimes, the model does not end up being as accurate as we would like. This could be for a number of reasons. Today, the reason is that the size of the training set was insufficient. 
+This pipeline uses several tools and features. Here's a high level overview of the tasks we'll be completing:
 
-We will need to go back and retrain our model with a large set of data, which will give us an even more accurate model.
+ * Deploy a minimal Kafka Cluster and create a Kafka Topic with the AMQ Streams operator.
+
+* Create object buckets in S3.
+
+* Create a Serverless Service and a KafkaSource listener to process events from the Kafka topic.
+
+* Create Grafana Data Sources and Dashboards to monitor our pipeline.
+
+
+== Log into OpenShift
+
+We'll start by logging our terminal session in Jupyterhub into OpenShift so that we can use the OpenShift cli, 'oc'. For more information on the OpenShift CLI, see https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html.
+
+To log into OpenShift, run the following command in the terminal.
+
+[source,sh,role="copypaste"]
+----
+oc login
+----
+
+You should see something like this (the project names may be different):
+
+[source,none]
+----
+Login successful.
+
+You have access to the following projects and can switch between them with 'oc project <projectname>':
+
+  * {{ USER_ID }}-notebooks
+
+Using project "{{ USER_ID }}-notebooks".
+Welcome! See 'oc help' to get started.
+----
+
+We'll come back to the OpenShift CLI later on when we get ready to deploy our applications.
+
+== Deploy the Infrastructure for our model
+
+Next, we'll deploy the infrastructure that we need for our lab.
+
+== Deploying the Database
+
+This database will hold some information on the images being uploaded, processed, and anonymized. This is basically their names, the model version with which they are analyzed, and a timestamp.
+All these information will be used on our Grafana Dashboard that displays last ten images from each category.
+
+We'll be using a MariaDB database for this. To deploy the database, click on +Add on the left menu from the console view. Click on Database. Select "MariaDB (Ephemeral)" and then click "Instantiate Template".
+
+Replace the following values:
+
+Database Service Name: xraylabdb
+Username: xraylab
+Password: xraylab
+Root Password: xraylab
+Database Name: xraylabdb
+
+image::instantiate-mariadb.png[instantiate-mariadb, 700]
+
+Wait for the database to roll out. You should see the circles in the topology turn dark blue.
+
+image::topology-xraylabdb.png[topology-xraylabdb, 700]
+
+=== Database configuration
+
+We now have a database and a schema, but we must initialize it with some tables. To configure the database, follow these steps.
+
+Connect to the database pod by running the following commands in the Jupyterhub terminal window:
+
+[source,sh,role="copypaste"]
+----
+oc rsh $(oc get pods | grep xraylabdb | grep Running | awk '{print $1}')
+----
+
+Your Terminal prompt is now the one from the database Pod. It should display:
+[source,bash,subs="{markup-in-source}"]
+----
+sh-4.2$
+----
+
+Connect to MariaDB
+
+[source,sh,role="copypaste"]
+----
+mysql -u root
+----
+
+Your Terminal prompt is now the one from the MySQL engine.
+
+Select the xraylabdb database
+
+[source,sh,role="copypaste"]
+----
+USE xraylabdb;
+----
+
+For the following commands, you can copy/paste all lines at once in the mysql prompt. 
+
+Initialize tables
+
+[source,sh,role="copypaste"]
+----
+DROP TABLE images_uploaded;
+DROP TABLE images_processed;
+DROP TABLE images_anonymized;
+
+CREATE TABLE images_uploaded(time TIMESTAMP, name VARCHAR(255));
+CREATE TABLE images_processed(time TIMESTAMP, name VARCHAR(255), model VARCHAR(10), label VARCHAR(20));
+CREATE TABLE images_anonymized(time TIMESTAMP, name VARCHAR(255));
+
+INSERT INTO images_uploaded(time,name) SELECT CURRENT_TIMESTAMP(), '';
+INSERT INTO images_processed(time,name,model,label) SELECT CURRENT_TIMESTAMP(), '', '','';
+INSERT INTO images_anonymized(time,name) SELECT CURRENT_TIMESTAMP(), '';
+----
+
+Exit mysql prompt
+
+[source,sh,role="copypaste"]
+----
+exit;
+----
+
+Your Terminal prompt is now the one from the database Pod!
+
+Exit database pod
+
+[source,sh,role="copypaste"]
+----
+exit
+----
+
+=== Create the Kafka Cluster and Topic
+
+Let's create a **Kafka cluster**. Click *+Add* on the left in the OpenShift topology view, and on the _From Catalog_ box on the project overview:
+
+Type in `kafka` in the search box, and click on the *Kafka*:
+
+image::kafka-catalog.png[kafka-catalog, 700]
+
+Click on *Create* and you will enter YAML editor that defines a *Kafka* Cluster. Keep the all values as-is then click on *Create* on the bottom.
+
+The zookeeper and kafka clusters will roll out in the Topology view.
+
+image::topology-kafka.png[topology-kafka, 700]
+
+Next, we will create Kafka _Topic_. Click _Add > From Catalog_ again, type in `kafka topic` in the search box, and click on the *Kafka Topic*:
+
+image::kafka-topic-catalog.png[kafka, 700]
+
+Click on *Create* and you will enter YAML editor that defines a *KafkaTopic* object. Change the name to `xray-images` as shown then click on *Create* on the bottom.
+
+image::create-kafka-topic.png[create-kafka-topic, 700]
+
+The Kafka topic will not display on the OpenShift topology.
+
+=== Configure the S3 buckets.
+
+We'll run a notebook to configure the S3 buckets that our application would use. This notebook (as well as our application) uses the "boto3" library for Python to configure the buckets. We'll need to install boto3 in our Jupyterhub instance by running the following commands in our terminal:
+
+[source,sh,role="copypaste"]
+----
+pip install boto3
+----
+
+You should see output similar to the following:
+
+[source,sh,role="copypaste"]
+----
+Collecting boto3
+  Downloading boto3-1.17.61-py2.py3-none-any.whl (131 kB)
+     |████████████████████████████████| 131 kB 6.2 MB/s
+Requirement already satisfied: jmespath<1.0.0,>=0.7.1 in /opt/app-root/lib/python3.6/site-packages (from boto3) (0.10.0)
+Collecting botocore<1.21.0,>=1.20.61
+  Downloading botocore-1.20.61-py2.py3-none-any.whl (7.5 MB)
+     |████████████████████████████████| 7.5 MB 15.3 MB/s
+Collecting s3transfer<0.5.0,>=0.4.0
+  Downloading s3transfer-0.4.2-py2.py3-none-any.whl (79 kB)
+     |████████████████████████████████| 79 kB 85.1 MB/s
+Requirement already satisfied: python-dateutil<3.0.0,>=2.1 in /opt/app-root/lib/python3.6/site-packages (from botocore<1.21.0,>=1.20.61->boto3) (2.8.1)
+Requirement already satisfied: urllib3<1.27,>=1.25.4 in /opt/app-root/lib/python3.6/site-packages (from botocore<1.21.0,>=1.20.61->boto3) (1.25.11)
+Requirement already satisfied: six>=1.5 in /opt/app-root/lib/python3.6/site-packages (from python-dateutil<3.0.0,>=2.1->botocore<1.21.0,>=1.20.61->boto3) (1.15.0)
+Installing collected packages: botocore, s3transfer, boto3
+  Attempting uninstall: botocore
+    Found existing installation: botocore 1.17.44
+    Uninstalling botocore-1.17.44:
+      Successfully uninstalled botocore-1.17.44
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+aiobotocore 1.1.2 requires botocore<1.17.45,>=1.17.44, but you have botocore 1.20.61 which is incompatible.
+Successfully installed boto3-1.17.61 botocore-1.20.61 s3transfer-0.4.2
+----
+
+Now that we've installed the module, navigate back to the jupyterhub notebooks and click on the "create_notifications.ipynb" notebook to launch it.
+
+Walk through the notebook to create the buckets:
+
+image::bucket-list.png[bucket-list, 700]
+
+== Deploy the Model
+
+Next we'll deploy the three services which will do the following steps in the pipeline:
+
+1) Grab an X-Ray image and drop it into the incoming bucket.
+2) Analyze the incoming image and tag it.
+3) Display a processed image.
+
+=== Deploy the Image Generator
+
+To deploy the Image Generator, we'll be building a container image from source. To build the container image, we'll use the "oc new-app" command. Enter the following command in the terminal tab:
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app . --strategy=docker --name=image-generator
+----
+
+You should see output similar to the following:
+
+[source,sh,role="copypaste"]
+----
+--> Found Docker image 81c4003 (2 days old) from Docker Hub for "python:3.7"
+
+    * An image stream tag will be created as "python:3.7" that will track the source image
+    * A Docker build using source code from https://github.com/msolberg/machine-learning-workshop-labs/#main will be created
+      * The resulting image will be pushed to image stream tag "image-generator:latest"
+      * Every time "python:3.7" changes a new build will be triggered
+    * This image will be deployed in deployment config "image-generator"
+    * The image does not expose any ports - if you want to load balance or send traffic to this component
+      you will need to create a service with 'expose dc/image-generator --port=[port]' later
+    * WARNING: Image "python:3.7" runs as the 'root' user which may not be permitted by your cluster administrator
+
+--> Creating resources ...
+    imagestream.image.openshift.io "python" created
+    imagestream.image.openshift.io "image-generator" created
+    buildconfig.build.openshift.io "image-generator" created
+    deploymentconfig.apps.openshift.io "image-generator" created
+--> Success
+    Build scheduled, use 'oc logs -f bc/image-generator' to track its progress.
+    Run 'oc status' to view your app.
+----
+
+Then, start a build from the local directory with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc start-build image-generator --from-dir=.
+----
+
+You can follow the progress of the build with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc logs -f bc/image-generator
+----
+
+You should see the Docker build running in the container. Once the build completes, switch over to the topology view to see the container deployment.
+
+image::image-generator-failed.png[image-generator-failed, 700]
+
+The icon for the image-generator deployment will cycle from blue to yellow to red, indicating that the deployment has failed. To determine the cause of the failure, click on the deployment icon, and click "view logs" next to the crashlooping pod.
+
+image::image-generator-failed-dc.png[image-generator-failed-dc, 700]
+
+You'll see that the pod is failing because it can't find the access key for the S3 endpoint:
+
+[source,sh,role="copypaste"]
+----
+botocore.exceptions.NoCredentialsError: Unable to locate credentials
+----
+
+To resolve this, we'll need to add the ceph-nano-credentials secret from the project to the deployment configuration. Go back to the topology view, click on the deployment, and select "Edit DeploymentConfig" from the Actions menu.
+
+Click on the "Environment" tab, and select "Add all from ConfigMap or Secret".
+
+image::image-generator-dc-env.png[image-generator-dc-env, 700]
+
+Click on Select a resource, and select "ceph-nano-credentials" from the menu.
+
+image::image-generator-dc-env-add.png[image-generator-dc-env-add, 700]
+
+Then click "Save" at the bottom of the pane to update the deployment configuration. The deployment will redeploy the new pods on the topology view and it should go to blue.
+
+=== Deploy the Image Server
+
+Finally, to deploy the Image Server, we'll be building another container image from source. To build the container image, we'll use the "oc new-app" command, as in the last example. Enter the following command in the terminal tab:
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs/services/image-server && oc new-app . --strategy=docker --name=image-server
+----
+
+You should see output similar to the previous example.
+
+Then, start a build from the local directory with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc start-build image-server --from-dir=.
+----
+
+You can follow the progress of the build with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc logs -f bc/image-server
+----
+
+You should see the Docker build running in the container. Once the build completes, switch over to the topology view to see the container deployment.
+
+The Image Server doesn't need credentials to view the S3 bucket, as the bucket has been marked as public. The deployment will succeed without the secret.
+
+
+=== Deploy the Risk Assessment Service
+
+The Risk Assessment Service runs as a KNative Serverless Application. We'll deploy this a little differently than we did the last one.
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs/services/risk-assessment && oc new-build . --name=risk-assessment --strategy=docker
+----
+
+Then, start a build from the local directory with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc start-build risk-assessment --from-dir=.
+----
+
+You can follow the progress of the build with the following command:
+
+[source,sh,role="copypaste"]
+----
+oc logs -f bc/risk-assessment
+----
+
+You should see the Docker build running in the container. Once the build completes, we'll define a KNative Service to run the container.
+
+Back on the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^], click on `+` icon on the right top corner.
+
+image::plus-icon.png[serverless, 500]
+
+Copy the following `Service` in `YAML` editor then click on *Create*:
+
+[source,yaml]
+----
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: risk-assessment
+spec:
+  template:
+    metadata:
+        annotations:
+          autoscaling.knative.dev/maxScale: '2'
+          autoscaling.knative.dev/target: '2'
+          revisionTimestamp: ''
+    spec:
+      timeoutSeconds: 30
+      containers:
+      - image: 'image-registry.openshift-image-registry.svc:5000/{{ USER_ID }}-notebooks/risk-assessment:latest'
+        ports:
+              - containerPort: 5000
+        env:
+        - name: model_version
+          value: 'v1'
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: ceph-nano-credentials
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ceph-nano-credentials
+              key: AWS_SECRET_ACCESS_KEY
+        resources:
+          limits:
+            cpu: 600m
+            memory: 600M
+          requests:
+            cpu: 400m
+            memory: 500M
+----
+
+In this service definition, we specify that the credentials for the S3 bucket should come from the ceph-nano-credentials secret.
+
+Finally, we need to create an event sink to send the events sent from the image generator to the KNative service.
+
+Let's move on to create *KafkaSource* to enable *Knative Eventing*. In this lab, _Knative Eventing_ is already installed via the _Knative Eventing Operator_ in OpenShift 4 cluster.
+
+Back on the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^], click on `+` icon on the right top corner.
+
+image::plus-icon.png[serverless, 500]
+
+Copy the following `KafkaSource` in `YAML` editor then click on *Create*:
+
+[source,yaml,role="copypaste"]
+----
+apiVersion: sources.knative.dev/v1beta1
+kind: KafkaSource
+metadata:
+  name: xray-images
+spec:
+  consumerGroup: risk-assessment
+  bootstrapServers:
+    - my-cluster-kafka-bootstrap:9092
+  topics:
+    - xray-images
+  sink:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: risk-assessment
+
+----
+
+You can see a new connection between Kafka and our *risk-assessment* service.
+
+image::knative-risk-assessment.png[knative-risk-assessment, 700]
+
+The three services that we need have now been deployed and the pipeline is running. In the next section, we'll add some visibility to the operation of the pipeline with a Grafana dashboard.

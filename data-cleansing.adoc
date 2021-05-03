@@ -28,82 +28,10 @@ https://jupyter.org/[Jupyter notebooks^] are widely used throughout the data sci
 
 In this first exercise, we'll be deploying a Jupyter Hub instance for our user on OpenShift and loading a notebook that performs some basic data cleansing and visualization exercizes on COVID-19 data from the https://covidtracking.com/[COVID Tracking project^].
 
-=== 1. Access Your Development Environment
-
-You will be using Red Hat CodeReady Workspaces, an online IDE based on https://www.eclipse.org/che/[Eclipse Che^]. *Changes to files are auto-saved every few seconds*, so you don’t need to explicitly save changes.
-
-To get started, {{ ECLIPSE_CHE_URL }}[access the CodeReady Workspaces instance^] and log in using the username and password you’ve been assigned (e.g. `{{ USER_ID }}/{{ CHE_USER_PASSWORD }}`):
-
-image::che-login.png[cdw, 700]
-
-Once you log in, you’ll be placed on your personal dashboard. Click on the name of
-the pre-created workspace on the left, as shown below (the name will be different depending on your assigned number).
-
-image::crw-landing.png[cdw, 700]
-
-You can also click on the name of the workspace in the center, and then click on the green {{ USER_ID}}-namespace that says _Open_ on the top right hand side of the screen:
-
-image::crw-landing-start.png[cdw, 700]
-
-After a minute or two, you’ll be placed in the workspace:
-
-image::che-workspace.png[cdw, 900]
-
-This IDE is based on Eclipse Che (which is in turn based on MicroSoft VS Code editor).
-
-You can see icons on the left for navigating between project explorer, search, version control (e.g. Git), debugging, and other plugins.  You’ll use these during the course of this workshop. Feel free to click on them and see what they do:
-
-image::crw-icons.png[cdw, 400]
-
-[NOTE]
-====
-If things get weird or your browser appears, you can simply reload the browser tab to refresh the view.
-====
-
-Many features of CodeReady Workspaces are accessed via *Commands*. You can see a few of the commands listed with links on the home page (e.g. _New File.._, _Git Clone.._, and others).
-
-If you ever need to run commands that you don't see in a menu, you can press kbd:[F1] to open the command window, or the more traditional kbd:[Control+SHIFT+P] (or kbd:[Command+SHIFT+P] on Mac OS X).
-
-Let's import our first project. Click on **Git Clone..** (or type kbd:[F1], enter 'git' and click on the auto-completed _Git Clone.._ )
-
-image::che-workspace-gitclone.png[cdw, 900]
-
-Step through the prompts, using the following value for **Repository URL**. If you use *FireFox*, it may end up pasting extra spaces at the end, so just press backspace after pasting:
-
-[source,none,role="copypaste"]
-----
-https://github.com/msolberg/machine-learning-workshop-labs.git
-----
-
-image::crw-clone-repo.png[crw,900]
-
-Click on *Select Repository Location* then click on *Open in New Window*. It will reload your web browser immediately:
-
-image::crw-add-workspace.png[crw, 900]
-
-The project is imported into your workspace and is visible in the project explorer:
-
-image::crw-clone-explorer.png[crw,900]
-
-==== IMPORTANT: Check out proper Git branch
-
-To make sure you're using the right version of the project files, run this command in a CodeReady Terminal:
-
-[source,sh,role="copypaste"]
-----
-cd $CHE_PROJECTS_ROOT/machine-learning-workshop-labs && git checkout main
-----
-
-[NOTE]
-====
-The Terminal window in CodeReady Workspaces. You can open a terminal window for any of the containers running in your Developer workspace. For the rest of these labs, anytime you need to run a command in a terminal, you can use the **>_ New Terminal** command on the right:
-
-image::codeready-workspace-terminal.png[codeready-workspace-terminal, 700]
-====
 
 == Deploy Open Data Hub
 
-We'll be using Open Data Hub to deploy JupyterHub, Ceph Nano, and Spark. The Open Data Hub operator is already installed for you, but you'll need to deploy an instance of it into your project.
+We'll be using Open Data Hub to deploy JupyterHub and Ceph Nano. The Open Data Hub operator is already installed for you, but you'll need to deploy an instance of it into your project.
 
 To deploy ODH, first open a new brower with the {{ CONSOLE_URL }}[OpenShift web console^]:
 
@@ -114,17 +42,23 @@ Login using:
 * Username: `{{ USER_ID }}`
 * Password: `{{ OPENSHIFT_USER_PASSWORD }}`
 
-You will see a list of projects to which you have access:
+When you first log in, you'll be presented with a Welcome dialog.
+
+image::welcome-dialog.png[welcome-dialog, 700]
+
+Go ahead and select "Get started" to get a tour of the user interface.
+
+After you finish the tour, you will see a list of projects to which you have access:
 
 image::openshift_landing.png[openshift_landing, 700]
 
-Open the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^].
+Select "{{ USER_ID }}-notebooks" to enter the namespace for the workshop.
 
 To deploy an instance of ODH, click *From Catalog* on the Add page.
 
 image::from-catalog.png[from-catalog, 700]
 
-Type in `Data` in the search box, and click on the *Open Data Hub*:
+Type in `Data Hub` in the search box, and click on the *Open Data Hub*:
 
 image::data-hub-operator.png[data-hub-operator, 700]
 
@@ -161,12 +95,28 @@ Click on *YAML View*. Replace the YAML in the edit box with the following defini
              name: manifests
              path: ceph/object-storage/nano
          name: ceph-nano
-       # Deploy Radanalytics Spark Operator
+       # Deploy Open Data Hub Grafana
+       - kustomizeConfig:
+           repoRef:
+            name: manifests
+            path: grafana/cluster
+         name: grafana-cluster
+       - kustomizeConfig:
+           repoRef:
+            name: manifests
+            path: grafana/grafana
+         name: grafana-instance
+       # Deploy Open Data Hub Prometheus
        - kustomizeConfig:
            repoRef:
              name: manifests
-             path: radanalyticsio/spark/cluster
-         name: radanalyticsio-spark-cluster
+             path: prometheus/cluster
+         name: prometheus-cluster
+       - kustomizeConfig:
+           repoRef:
+             name: manifests
+             path: prometheus/operator
+         name: prometheus-operator
        # Deploy Open Data Hub JupyterHub
        - kustomizeConfig:
            parameters:
@@ -189,7 +139,7 @@ Click on *YAML View*. Replace the YAML in the edit box with the following defini
        # Official Open Data Hub v1.0.0 component manifests repo
        # This shows that we will be deploying components from an archive of the odh-manifests repo tagged for v1.0.0
        - name: manifests
-         uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v1.0.0'
+         uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v1.0.2'
 ----
 
 image::create-kfdef.png[create-kfdef, 700]
@@ -198,47 +148,78 @@ Click *Create*. On the topology view, you should see the Open Data Hub Component
 
 image::deployed-odh.png[deployed-odh, 700]
 
-Although your CodeReady workspace is running on the Kubernetes cluster, it’s running with a default restricted _Service Account_ that prevents you from creating most resource types. If you’ve completed other modules, you’re probably already logged in, but let’s login again: click on *Login to OpenShift*, and enter your given credentials:
+== Getting Started with JupyterHub
+
+=== Connect to JupyterHub
+
+Click on the jupyterhub icon and look for the "Routes" section.
+
+image::jupyterhub-dc.png[jupyterhub-dc, 700]
+
+Just click on this link, a new tab will open. Click on the button *Sign in with OpenShift*, and use your OpenShift credentials to connect.
 
 * Username: `{{ USER_ID }}`
 * Password: `{{ OPENSHIFT_USER_PASSWORD }}`
 
-image::cmd-login.png[login,700]
-
-You should see something like this (the project names may be different):
-
-[source,none]
-----
-Login successful.
-
-You have access to the following projects and can switch between them with 'oc project <projectname>':
-
-  * {{ USER_ID }}-notebooks
-
-Using project "{{ USER_ID }}-notebooks".
-Welcome! See 'oc help' to get started.
-----
-
-[NOTE]
-====
-After you log in using *Login to OpenShift*, the terminal is no longer usable as a regular terminal. You can close the terminal window. You will still be logged in when you open more terminals later!
-====
-
-
-== Buckets and Bucket Notifications creation
-
-=== Connect to JupyterHub
-
-Click on the jupyterhub icon and look for the "Routes" section. Click on the route listed there.
-
-Just click on this link, a new tab will open. Click on the button *Sign in with OpenShift*, and use your OpenTLC credentials to connect.+
 On the first connection, OpenShift will ask to authorize the application to access your username just click *Allow selected permissions*.
+
+image::authorize-jupyterhub.png[authorize-jupyterhub, 700]
 
 === Launch Jupyter
 
-On the *Spawner Options* page select the *s2i-minimal-notebook:3.6* image from the first dropdown (this should be the default image), and click *Spawn* at the bottom.
+Once you log into JupyterHub, you'll be asked to enter your S3 credentials. When we deployed Open Data Hub, we asked it to provision an instance of "ceph-nano" for us to use. The credentials for "ceph-nano" are stored in our namespace in a Kubernetes Secret.
+
+To find these values, return to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^]. Click on *Secrets* on the left navigation. Then look for *ceph-nano-credentials* on the list of secrets and click on it. Scroll to the "Data" section and select *Reveal Values*. 
+
+image::ceph-nano-secret.png[ceph-nano-secret,700]
+
+Copy and paste the Key ID and Access Key into the fields the JupyterHub UI.
+
+image::aws-credentials.png[aws-credentials,700]
+
+On the *Spawner Options* page select the *s2i-tensorflow-notebook:v0.0.2* image from the first dropdown and click *Start* at the bottom. We'll be using Tensorflow to generate the model in our next step.
+
+image::spawner-options.png[spawner-options,700]
 
 Your Jupyter environment will take 15-20 seconds to launch.
 
-It will display a _File Explore like_ interface. Click on the *xraylab_notebooks.git* folder, then on the *georgia_covidtracking.ipynb* file, which will launch the notebook.
+Once your environment is up and running, select "Terminal" from the "New" menu to launch a terminal.
+
+image::jupyter-new-menu.png[jupyter-new-menu,700]
+
+=== Check out code
+
+We'll start out by cloning the git repository that we'll be using during this lab. The repository contains the notebooks and the code for creating and deploying our model. In the terminal, run the following command:
+
+[source,sh,role="copypaste"]
+----
+git clone https://github.com/msolberg/machine-learning-workshop-labs/
+----
+
+==== IMPORTANT: Check out proper Git branch
+
+To make sure you're using the right version of the project files, run this command in the terminal:
+
+[source,sh,role="copypaste"]
+----
+cd ~/machine-learning-workshop-labs && git checkout main
+----
+
+=== Run the data cleansing notebook.
+
+Navigate back to the jupyterhub Home Page tab. You should see the labs in the interface now:
+
+image::jupyter-explorer.png[jupyter-explorer,700]
+
+Click on the "machine-learning-workshop-labs" folder and click on the "notebooks" folder.
+
+Click on "georgia-covidtracking.ipynb" to open up the data cleansing notebook.
+
+Run through the notebook using the "Run" button on the main toolbar:
+
+image::jupyter-toolbar.png[jupyter-toolbar,700]
+
+The notebook will guide you through downloading the data from the COVID Tracking Project, visualizing it, and cleansing it.
+
+Once you've finished cleansing the data, we're ready to move on to creating a model to diagnose illness from image files.
 
