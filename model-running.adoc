@@ -217,7 +217,7 @@ To deploy the Image Generator, we'll be building a container image from source. 
 
 [source,sh,role="copypaste"]
 ----
-cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app . --strategy=docker --name=image-generator
+cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app https://github.com/msolberg/machine-learning-workshop-labs --context-dir=services/image-generator --name=image-generator --strategy=docker
 ----
 
 You should see output similar to the following:
