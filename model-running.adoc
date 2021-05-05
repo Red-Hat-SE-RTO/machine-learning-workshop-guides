@@ -222,7 +222,7 @@ cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app https
 
 You should see output similar to the following:
 
-[source,sh,role="copypaste"]
+[source,sh]
 ----
 --> Found Docker image 81c4003 (2 days old) from Docker Hub for "python:3.7"
 
@@ -347,7 +347,7 @@ image::plus-icon.png[serverless, 500]
 
 Copy the following `Service` in `YAML` editor then click on *Create*:
 
-[source,yaml]
+[source,yaml,role="copypaste"]
 ----
 apiVersion: serving.knative.dev/v1
 kind: Service
