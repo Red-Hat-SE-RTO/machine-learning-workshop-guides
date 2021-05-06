@@ -23,4 +23,5 @@ modules:
   - data-cleansing
   - model-training
   - model-running
-  - model-updates
+  - model-monitoring
+
