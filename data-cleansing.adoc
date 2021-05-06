@@ -152,6 +152,8 @@ image::deployed-odh2.png[deployed-odh, 700]
 
 === Connect to JupyterHub
 
+Note: the little green square in the lower left of the diagram calls out the "arrange" function in the topology view. It *might* help arrange the topology more neatly.
+
 Click on the jupyterhub icon and look for the "Routes" section.
 
 image::jupyterhub-dc.png[jupyterhub-dc, 700]
