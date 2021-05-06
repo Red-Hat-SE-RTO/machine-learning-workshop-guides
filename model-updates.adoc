@@ -28,7 +28,7 @@ spec:
 
 === Verification
 
-In the Console, you can navigate to Operators->Installed Operators->Grafana Operator, and select the Grafana Data Source tab. `mysql-grafana-datasource` should be listed. +
+In the Console, select the "Administrator" persona in the top left of the console. You can navigate to Operators->Installed Operators->Grafana Operator, and select the Grafana Data Source tab. `mysql-grafana-datasource` should be listed. +
 You will notice that there already is another Data Source here, `prometheus-grafana-datasource`. This has been created as part of you Lab deployment as it involved copying secrets to access the cluster Prometheus instance. Believe me, it was easier this way. This other datasource will allow us to display stats on CPU/RAM usage and Pods deployments.
 
 #TODO: We need to fix this!
@@ -37,7 +37,7 @@ You will notice that there already is another Data Source here, `prometheus-graf
 
 This is the definition of the dashboard that displays the large versions of the images. +
 
-And this is a little bit tricky... With the Grafana operator, dasboard definitions are stored in a JSON string where it's not easy to use variables or parameters, like the namespace we are in. So this time our source file is a template that must be first processed before being applied.
+And this is a little bit tricky... With the Grafana operator, dashboard definitions are stored in a JSON string where it's not easy to use variables or parameters, like the namespace we are in. So this time our source file is a template that must be first processed before being applied.
 
 === Creation
 
