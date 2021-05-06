@@ -41,3 +41,9 @@ It will take a while to train the model in our environment, as we don't have acc
 
 The final step in the model training notebook will tell us the accuracy of the model that we've created. Once we've trained the model, we're ready to move on to deploying the model.
 
+We are going to keep our notebooks where they are, but let us tidy up the diagram a bit with by executing these commands in the *shell*
+
+[source,sh,role="copypaste"]
+----
+
+----

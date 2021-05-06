@@ -245,14 +245,7 @@ You should see output similar to the following:
     Run 'oc status' to view your app.
 ----
 
-Then, start a build from the local directory with the following command:
-
-[source,sh,role="copypaste"]
-----
-oc start-build image-generator --from-dir=.
-----
-
-You can follow the progress of the build with the following command:
+You can follow the progress of the build, which is part of the deployment process, with the following command:
 
 [source,sh,role="copypaste"]
 ----
