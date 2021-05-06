@@ -146,7 +146,7 @@ image::create-kfdef.png[create-kfdef, 700]
 
 Click *Create*. On the topology view, you should see the Open Data Hub Components being deployed.
 
-image::deployed-odh.png[deployed-odh, 700]
+image::deployed-odh2.png[deployed-odh, 700]
 
 == Getting Started with JupyterHub
 
@@ -177,9 +177,11 @@ Copy and paste the Key ID and Access Key into the fields the JupyterHub UI.
 
 image::aws-credentials.png[aws-credentials,700]
 
-On the *Spawner Options* page select the *s2i-tensorflow-notebook:v0.0.2* image from the first dropdown and click *Start* at the bottom. We'll be using Tensorflow to generate the model in our next step.
+On the *Spawner Options* page select the *s2i-tensorflow-notebook:v0.0.2* image from the first dropdown.
 
-image::spawner-options.png[spawner-options,700]
+Next, select Container size: *Medium* and click *Start* at the bottom. We'll be using Tensorflow to generate the model in our next step.
+
+image::Container-image-and-size.png[spawner-options,700]
 
 Your Jupyter environment will take 15-20 seconds to launch.
 
@@ -204,6 +206,10 @@ To make sure you're using the right version of the project files, run this comma
 ----
 cd ~/machine-learning-workshop-labs && git checkout main
 ----
+
+The results will look like this if you are successful.
+
+image::gitclone.png[]
 
 === Run the data cleansing notebook.
 

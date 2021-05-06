@@ -311,9 +311,34 @@ You can follow the progress of the build with the following command:
 oc logs -f bc/image-server
 ----
 
+We'll want to add a route to the image server so that we can view the images as they are processed. To add a route to the image server, run the following command:
+
+[source,sh,role="copypaste"]
+----
+oc expose svc/image-server
+----
+
+You will see the route that gets created by running the following command:
+
+[source,sh,role="copypaste"]
+----
+oc get route
+----
+
+You should see output similar to the following:
+
+[source,sh]
+----
+NAME                HOST/PORT                                                                          PATH      SERVICES            PORT       TERMINATION     WILDCARD
+grafana-route       grafana-route-user3-notebooks.apps.cluster-b913.b913.sandbox1073.opentlc.com                 grafana-service       3000       edge            None
+image-server        image-server-user3-notebooks.apps.cluster-b913.b913.sandbox1073.opentlc.com                  image-server          5000-tcp                   None
+jupyterhub          jupyterhub-user3-notebooks.apps.cluster-b913.b913.sandbox1073.opentlc.com                    jupyterhub            8080-tcp   edge/Redirect   None
+prometheus-portal   prometheus-portal-user3-notebooks.apps.cluster-b913.b913.sandbox1073.opentlc.com             prometheus-operated   web                        None
+----
+
 You should see the Docker build running in the container. Once the build completes, switch over to the topology view to see the container deployment.
 
-The Image Server doesn't need credentials to view the S3 bucket, as the bucket has been marked as public. The deployment will succeed without the secret.
+The Image Server also needs credentials to view the S3 bucket. Follow the same steps as above to add the secret to the deployment configuration.
 
 
 === Deploy the Risk Assessment Service

@@ -1,0 +1,71 @@
+== Model Monitoring
+
+We've deployed our model, but we don't really have a view in to how it's operating. In this section, we'll deploy a Grafana dashboard so that we can monitor our model's operation and we'll make updates to the model to improve accuracy.
+
+The Grafana Operator has already been deployed in your project as a part of the Open Data Hub installation. So creating this datasource is as simple as applying its definition, and the operator will take care of the rest!
+
+=== Creation
+
+The first thing we'll need to do is to add a datasource so that Grafana can read the current state of the pipeline from the MariaDB instance that we deployed earlier in the workshop.
+
+With the Grafana operator, we can define a GrafanaDataSource in YAML and have the operator add it to the running instance of Grafana for us. We'll do this in the same way that we created the KafkaSource for our KNative application in the last section.
+
+Back on the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^], click on `+` icon on the right top corner.
+
+image::plus-icon.png[serverless, 500]
+
+Copy the following `GrafanaDataSource` in `YAML` editor then click on *Create*:
+
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: mysql-grafana-datasource
+spec:
+  datasources:
+    - type: mysql
+      name: MySQL
+      access: proxy
+      url: xraylabdb
+      database: xraylabdb
+      user: xraylab
+      password: xraylab
+  name: grafana-mysql-datasource.yaml
+----
+
+== Grafana Dashboard
+
+After we've created the GrafanaDataSource, we'll create the Dashboard that we'll be using to monitor the model.
+
+Grafana Dashboards are exported as JSON files and this one is long enough to be difficult to read. Instead of pasting it into a window like we did before, we'll use an OpenShift Template to deploy it.
+
+=== Creation
+
+OpenShift Templates allow for the definition of variables, which can be defined at the time of instantiation. This allows you to reuse a template from one environment in another environment easily. We'll use this functionality to insert the namespace of the current environment into the YAML that we'll then apply with the oc command line tool. The following variables are defined in this template:
+
+* namespace: the name of you project. It’s used to query the right metrics from Prometheus (Pods, CPU,…​)
+
+To process the template and create the GrafanaDashboard object, use the following command from inside the Jupyter terminal:
+
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+oc process -f ~/machine-learning-workshop-labs/dashboards/grafana-xraylab-dashboard-template.yaml -p namespace={{ USER_ID }}-notebooks | oc apply -f -
+----
+
+=== Verification
+
+Once we've defined the GrafanaDataSource and the GrafanaDashboard, the Grafana Operator will reconcile the running instance of Grafana in our Data Hub and we should be able to see them in the Grafana UI.
+
+Click on the "grafana-deployment" object in the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-notebooks[Topology View^] and find the route in the "Routes" section. Clicking on that route will bring up the Grafana UI in a different tab.
+
+image::grafana-deployment.png[grafana-deployment, 700]
+
+You should see the "XRay Lab" dashboard we just created under "Recently viewed dashboards" on the front page:
+
+image::grafana-recent-dashboards.png[grafana-recent-dashboards, 700]
+
+The Dashboard shows how many images have been processed at each point in the pipeline as well as the results of the model being run against them.
+
+image::grafana-dashboard.png[grafana-dashboard, 700]
+
