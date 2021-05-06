@@ -1,0 +1,137 @@
+== Model Monitoring
+
+We've deployed our model, but we don't really have a view in to how it's operating. In this section, we'll deploy a Grafana dashboard so that we can monitor our model's operation and we'll make updates to the model to improve accuracy.
+
+The Grafana Operator has already been deployed in your project as a part of the Open Data Hub installation. So creating this datasource is as simple as applying its definition, and the operator will take care of the rest!
+
+=== Creation
+
+Have a look at the file, and apply it:
+
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: mysql-grafana-datasource
+spec:
+  datasources:
+    - type: mysql
+      name: MySQL
+      access: proxy
+      url: xraylabdb
+      database: xraylabdb
+      user: xraylab
+      password: xraylab
+  name: grafana-mysql-datasource.yaml
+----
+
+=== Verification
+
+In the Console, you can navigate to Operators->Installed Operators->Grafana Operator, and select the Grafana Data Source tab. `mysql-grafana-datasource` should be listed. +
+You will notice that there already is another Data Source here, `prometheus-grafana-datasource`. This has been created as part of you Lab deployment as it involved copying secrets to access the cluster Prometheus instance. Believe me, it was easier this way. This other datasource will allow us to display stats on CPU/RAM usage and Pods deployments.
+
+#TODO: We need to fix this!
+
+== Grafana Images Dashboard
+
+This is the definition of the dashboard that displays the large versions of the images. +
+
+And this is a little bit tricky... With the Grafana operator, dasboard definitions are stored in a JSON string where it's not easy to use variables or parameters, like the namespace we are in. So this time our source file is a template that must be first processed before being applied.
+
+=== Creation
+
+Have a look at the file (if you want, this one is pretty long and complicated), and process/apply it. The two parameters that have to be processed in the template are:
+
+* image_server_url: the route to the image server deployment. It’s the external route that your browser will directly connect to, to retrieve and display the images. This route is particular to your namespace on the cluster.
+
+Originally the command would look like:
+`oc process -f ~/machine-learning-workshop-labs/grafana-xraylab-images-dashboard-template.yaml -p image_server_url=<replace_me> | oc apply -f -`
+
+But if you have followed my instructions and kept the bucket_base_name to be your main project name, `xraylab-{GUID}`, the command should directly be:
+
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+oc process -f ~/machine-learning-workshop-labs/grafana-xraylab-images-dashboard-template.yaml -p image_server_url=https://image-server-{{ USER_ID }}-notebooks.{ROUTE_SUBDOMAIN} | oc apply -f -
+----
+
+=== Verification
+
+In the Console, you can navigate to Operators->Installed Operators->Grafana Operator, and select the Grafana Dashboard tab. `xraylab-images-dashboard` should be listed.
+
+
+== Grafana Main Dashboard
+
+This is the definition of the main dashboard. +
+
+The same method will be applied to process the template and apply the result.
+
+=== Creation
+
+Have a look at the file (if you want, this one is pretty long and complicated), and process/apply it. The now three parameters that have to be processed in the template are:
+
+* image_server_url: the route to the image server deployment. It’s the external route that your browser will directly connect to, to retrieve and display the images.
+
+* namespace: the name of you project. It’s used to query the right metrics from Prometheus (Pods, CPU,…​)
+
+Originally the command would look like:
+`oc process -f ~/machine-learning-workshop-labs/dashboards/grafana-xraylab-dashboard-template.yaml -p image_server_url=<replace_me> -p namespace={{ USER_ID }}-notebooks | oc apply -f -`
+
+But again, if you have followed my instructions and kept the bucket_base_name to be your main project name, `xraylab-{GUID}`, the command should directly be:
+
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+oc process -f ~/machine-learning-workshop-labs/grafana-xraylab-dashboard-template.yaml -p image_server_url=https://image-server-xraylab-{{ USER_ID }}-notebooks.{APPS_SUBDOMAIN} -p namespace=xraylab-{{ USER_ID }} | oc apply -f -
+----
+
+=== Verification
+
+In the Console, you can navigate to Operators->Installed Operators->Grafana Operator, and select the Grafana Dashboard tab. `xraylab-dashboard` should be listed.
+== The Grafana instance
+
+Finally, we can create the Grafana instance itself. The operator will pick up our Data Sources and Dashboards defintions, and merge them automatically into the deployment!
+
+=== Creation
+
+Have a look at the file, and apply it:
+
+[source,bash,subs="{markup-in-source}",role=execute]
+----
+apiVersion: integreatly.org/v1alpha1
+kind: Grafana
+metadata:
+  name: xraylab-grafana
+spec:
+  ingress:
+    enabled: true
+  config:
+    auth:
+      disable_signout_menu: true
+    auth.anonymous:
+      enabled: true
+    log:
+      level: warn
+      mode: console
+    security:
+      admin_password: secret
+      admin_user: root
+  dashboardLabelSelector:
+    - matchExpressions:
+        - key: app
+          operator: In
+          values:
+            - grafana
+----
+
+=== Verification
+
+In the Console, navigate to Workloads->Pods, and wait for the pod `grafana-deployment-xxxxx` to be in the Running state. +
+
+You can then navigate to Networking->Routes, click on the location (URL) for the `grafana-route` route. This will open a new tab in your browser. +
+You may have to wait a little bit and refresh though as Grafana is sometimes slow to start and serve requests.
+
+In Grafana, hover on the left on the "four squares" icon, and select *Manage*. Then click on the folder which should have the name of your project, and click on *XRay Lab*. The dashboard is displayed! 
+
+We will be following the same steps as before to train the model, but we will be modifying our code to use a larger set of data.
+
+Now that our model has been retrained, let's redeploy and see how it fares.
