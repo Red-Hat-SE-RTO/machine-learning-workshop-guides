@@ -37,7 +37,7 @@ You will notice that there already is another Data Source here, `prometheus-graf
 
 This is the definition of the dashboard that displays the large versions of the images. +
 
-And this is a little bit tricky... With the Grafana operator, dasboard definitions are stored in a JSON string where it's not easy to use variables or parameters, like the namespace we are in. So this time our source file is a template that must be first processed before being applied.
+And this is a little bit tricky... With the Grafana operator, dashboard definitions are stored in a JSON string where it's not easy to use variables or parameters, like the namespace we are in. So this time our source file is a template that must be first processed before being applied.
 
 === Creation
 
@@ -57,8 +57,17 @@ oc process -f ~/machine-learning-workshop-labs/grafana-xraylab-images-dashboard-
 
 === Verification
 
-In the Console, you can navigate to Operators->Installed Operators->Grafana Operator, and select the Grafana Dashboard tab. `xraylab-images-dashboard` should be listed.
+In the Console, you can navigate to Operators->Installed Operators->Grafana Operator, and select the Grafana Dashboard tab. 
 
+Per the diagram below, you will want to hit the "four squares" icon under the search magnifying glass.
+
+Then click Manage.
+
+image::Dashboard-2.png[Grafana Dashboard]
+
+Now we can find our dashboard under {{ USER_ID }}-notebooks as below:
+
+image::dashboard-choices.png
 
 == Grafana Main Dashboard
 
@@ -115,12 +124,20 @@ spec:
     security:
       admin_password: secret
       admin_user: root
-  dashboardLabelSelector:
-    - matchExpressions:
-        - key: app
-          operator: In
-          values:
-            - grafana
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDataSource
+metadata:
+  name: mysql-grafana-datasource
+spec:
+  datasources:
+    - type: mysql
+      name: MySQL
+      access: proxy
+      url: xraylabdb
+      database: xraylabdb
+      user: xraylab
+      password: xraylab
+  name: grafana-mysql-datasource.yaml            - grafana
 ----
 
 === Verification

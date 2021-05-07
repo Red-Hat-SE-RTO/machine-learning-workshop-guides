@@ -2,7 +2,7 @@
 
 In order for your application to successfully make predictions, it will require a properly trained model. In this section we will be training the model that the application will be using later.
 
-A model is essentially a mathematical function (Think something like y = mx + b). The training process determines the parameters for the function that are needed to get the results we want.
+A model is essentially a mathematical function ( Think something like *_y = mx + b_* ). The training process *determines the parameters* for the function that are needed to get the results we want.
 
 With the help of Tensor Flow, training becomes a pretty straight forward process. We already have tagged data which will tell our model what the expected outcome for the object is. Tensor Flow will handle creating the model from the tagged data. Since we have a limited number of objects to identify, we will only be using a subset of the tagged data for the training so that we have data we can use for testing/verification.
 
@@ -41,9 +41,4 @@ It will take a while to train the model in our environment, as we don't have acc
 
 The final step in the model training notebook will tell us the accuracy of the model that we've created. Once we've trained the model, we're ready to move on to deploying the model.
 
-We are going to keep our notebooks where they are, but let us tidy up the diagram a bit with by executing these commands in the *shell*
-
-[source,sh,role="copypaste"]
-----
-
-----
+You are ready for the next chapter. We knew you could do it!
