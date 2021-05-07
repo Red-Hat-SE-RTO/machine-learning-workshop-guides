@@ -61,9 +61,13 @@ Click on the "grafana-deployment" object in the {{ CONSOLE_URL }}/topology/ns/{{
 
 image::grafana-deployment.png[grafana-deployment, 700]
 
-You should see the "XRay Lab" dashboard we just created under "Recently viewed dashboards" on the front page:
+To see the dashboard, click on the interface. Use the "four squares" (multiple dashboards?) Icon, and then select Manage as shown below.
 
-image::grafana-recent-dashboards.png[grafana-recent-dashboards, 700]
+image::Dashboard-2.png[Grafana Dashboard]
+
+Next, click on your {{ USER_ID }}-notebooks. Then you may choose the XRay Lab.
+
+image::dashboard-choices.png[Select The Dashboard]
 
 The Dashboard shows how many images have been processed at each point in the pipeline as well as the results of the model being run against them.
 
