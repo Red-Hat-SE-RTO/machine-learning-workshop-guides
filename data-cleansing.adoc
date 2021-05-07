@@ -28,7 +28,6 @@ https://jupyter.org/[Jupyter notebooks^] are widely used throughout the data sci
 
 In this first exercise, we'll be deploying a Jupyter Hub instance for our user on OpenShift and loading a notebook that performs some basic data cleansing and visualization exercizes on COVID-19 data from the https://covidtracking.com/[COVID Tracking project^].
 
-
 == Deploy Open Data Hub
 
 We'll be using Open Data Hub to deploy JupyterHub and Ceph Nano. The Open Data Hub operator is already installed for you, but you'll need to deploy an instance of it into your project.
@@ -148,11 +147,13 @@ Click *Create*. On the topology view, you should see the Open Data Hub Component
 
 image::deployed-odh2.png[deployed-odh, 700]
 
+Note: the little green square in the lower left of the diagram calls out the "arrange" function in the topology view. It *might* help arrange the topology more neatly.
+
+
+
 == Getting Started with JupyterHub
 
 === Connect to JupyterHub
-
-Note: the little green square in the lower left of the diagram calls out the "arrange" function in the topology view. It *might* help arrange the topology more neatly.
 
 Click on the jupyterhub icon and look for the "Routes" section.
 
@@ -187,7 +188,7 @@ image::Container-image-and-size.png[spawner-options,700]
 
 Your Jupyter environment will take 15-20 seconds to launch.
 
-Once your environment is up and running, select "Terminal" from the "New" menu to launch a terminal.
+Once your environment is up and running, select *"Terminal"* from the *"New"* menu to launch a terminal.
 
 image::jupyter-new-menu.png[jupyter-new-menu,700]
 
@@ -219,9 +220,9 @@ Navigate back to the jupyterhub Home Page tab. You should see the labs in the in
 
 image::jupyter-explorer.png[jupyter-explorer,700]
 
-Click on the "machine-learning-workshop-labs" folder and click on the "notebooks" folder.
+Click on the *"machine-learning-workshop-labs" folder* and click on the *"notebooks" folder*.
 
-Click on "georgia-covidtracking.ipynb" to open up the data cleansing notebook.
+Click on *"georgia-covidtracking.ipynb"* to open up the data cleansing notebook.
 
 Run through the notebook using the "Run" button on the main toolbar:
 
@@ -231,3 +232,4 @@ The notebook will guide you through downloading the data from the COVID Tracking
 
 Once you've finished cleansing the data, we're ready to move on to creating a model to diagnose illness from image files.
 
+Congratulations! You have run the notebook and are ready for the next chapter.

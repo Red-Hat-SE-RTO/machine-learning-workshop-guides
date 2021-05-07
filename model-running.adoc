@@ -42,6 +42,27 @@ Using project "{{ USER_ID }}-notebooks".
 Welcome! See 'oc help' to get started.
 ----
 
+== Revisiting the Topology Map
+
+Just for fun, now that we are logged in do the openshift system from the command terminal, let's do the following.
+
+Using the command block below you will add some topological references to the diagram that illustrates to the observer more about how it operates:
+
+[source,sh,role="copypaste"]
+----
+oc label dc/jupyterhub-db app.openshift.io/runtime=postgresql --overwrite && \
+oc label dc/jupyterhub app.openshift.io/runtime=python --overwrite && \
+oc annotate dc/jupyterhub app.openshift.io/connects-to=jupyterhub-db --overwrite &&  \
+oc label dc/jupyterhub-db app.kubernetes.io/part-of=OpenDataHub --overwrite && \
+oc label dc/jupyterhub app.kubernetes.io/part-of=OpenDataHub --overwrite && \
+oc label pod/jupyterhub-nb-{{ USER_ID }} app.openshift.io/runtime=python --overwrite && \
+oc label pod/jupyterhub-nb-{{ USER_ID }} app.kubernetes.io/part-of=OpenDataHub
+----
+
+After a little dragging of items around the screen, your topology could look like this!
+
+image::balloon-animals.png[]
+
 We'll come back to the OpenShift CLI later on when we get ready to deploy our applications.
 
 == Deploy the Infrastructure for our model
@@ -68,6 +89,13 @@ image::instantiate-mariadb.png[instantiate-mariadb, 700]
 Wait for the database to roll out. You should see the circles in the topology turn dark blue.
 
 image::topology-xraylabdb.png[topology-xraylabdb, 700]
+
+Updating for the mascot of MariaDB, while optional, will gain you the _"Seal of Approval"_. 
+
+[source,sh,role="copypaste"]
+----
+oc label dc/xraylabdb app.openshift.io/runtime=mariadb
+----
 
 === Database configuration
 
@@ -101,6 +129,8 @@ Select the xraylabdb database
 ----
 USE xraylabdb;
 ----
+
+
 
 For the following commands, you can copy/paste all lines at once in the mysql prompt. 
 
@@ -137,6 +167,10 @@ Exit database pod
 exit
 ----
 
+Here is your database in the topology, all ready to go (Note: We were not kidding about the "Seal of Approval").
+
+image::seal-of-approval.png[topology-xraylabdb]
+
 === Create the Kafka Cluster and Topic
 
 Let's create a **Kafka cluster**. Click *+Add* on the left in the OpenShift topology view, and on the _From Catalog_ box on the project overview:
@@ -149,7 +183,7 @@ Click on *Create* and you will enter YAML editor that defines a *Kafka* Cluster.
 
 The zookeeper and kafka clusters will roll out in the Topology view.
 
-image::topology-kafka.png[topology-kafka, 700]
+image::topology-kafka.png[topology-kafka]
 
 Next, we will create Kafka _Topic_. Click _Add > From Catalog_ again, type in `kafka topic` in the search box, and click on the *Kafka Topic*:
 
@@ -197,7 +231,9 @@ aiobotocore 1.1.2 requires botocore<1.17.45,>=1.17.44, but you have botocore 1.2
 Successfully installed boto3-1.17.61 botocore-1.20.61 s3transfer-0.4.2
 ----
 
-Now that we've installed the module, navigate back to the jupyterhub notebooks and click on the "create_notifications.ipynb" notebook to launch it.
+Ignore the complaining that the pip program does at the end of the installation.
+
+Now that we've installed the module, navigate back to the jupyterhub notebooks and *click* on the *"create_notifications.ipynb"* notebook to launch it.
 
 Walk through the notebook to create the buckets:
 
