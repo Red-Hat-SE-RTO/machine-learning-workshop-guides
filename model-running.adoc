@@ -44,7 +44,7 @@ Welcome! See 'oc help' to get started.
 
 == Revisiting the Topology Map
 
-Just for fun, now that we are logged in do the openshift system from the command terminaol, let's do the following.
+Just for fun, now that we are logged in do the openshift system from the command terminal, let's do the following.
 
 Using the command block below you will add some topological references to the diagram that illustrates to the observer more about how it operates:
 
