@@ -78,11 +78,14 @@ We'll be using a MariaDB database for this. To deploy the database, click on +Ad
 
 Replace the following values:
 
-Database Service Name: xraylabdb
-Username: xraylab
-Password: xraylab
-Root Password: xraylab
-Database Name: xraylabdb
+[width=15%]
+|=================================
+|Database Service Name: |xraylabdb
+|Username:              |xraylab
+|Password:              |xraylab
+|Root Password:         |xraylab
+|Database Name:         |xraylabdb
+|=================================
 
 image::instantiate-mariadb.png[instantiate-mariadb, 700]
 
