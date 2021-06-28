@@ -256,7 +256,7 @@ To deploy the Image Generator, we'll be building a container image from source. 
 
 [source,sh,role="copypaste"]
 ----
-cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app https://github.com/msolberg/machine-learning-workshop-labs --context-dir=services/image-generator --name=image-generator --strategy=docker
+cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app https://github.com/Red-Hat-SE-RTO/machine-learning-workshop-labs --context-dir=services/image-generator --name=image-generator --strategy=docker
 ----
 
 You should see output similar to the following:
@@ -266,7 +266,7 @@ You should see output similar to the following:
 --> Found Docker image 81c4003 (2 days old) from Docker Hub for "python:3.7"
 
     * An image stream tag will be created as "python:3.7" that will track the source image
-    * A Docker build using source code from https://github.com/msolberg/machine-learning-workshop-labs/#main will be created
+    * A Docker build using source code from https://github.com/Red-Hat-SE-RTO/machine-learning-workshop-labs/#main will be created
       * The resulting image will be pushed to image stream tag "image-generator:latest"
       * Every time "python:3.7" changes a new build will be triggered
     * This image will be deployed in deployment config "image-generator"

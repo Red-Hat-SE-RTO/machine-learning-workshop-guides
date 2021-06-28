@@ -198,7 +198,7 @@ We'll start out by cloning the git repository that we'll be using during this la
 
 [source,sh,role="copypaste"]
 ----
-git clone https://github.com/msolberg/machine-learning-workshop-labs/
+git clone https://github.com/Red-Hat-SE-RTO/machine-learning-workshop-labs/
 ----
 
 ==== IMPORTANT: Check out proper Git branch
