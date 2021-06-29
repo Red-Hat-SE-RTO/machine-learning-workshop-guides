@@ -74,7 +74,11 @@ Next, we'll deploy the infrastructure that we need for our lab.
 This database will hold some information on the images being uploaded, processed, and anonymized. This is basically their names, the model version with which they are analyzed, and a timestamp.
 All these information will be used on our Grafana Dashboard that displays last ten images from each category.
 
-We'll be using a MariaDB database for this. To deploy the database, click on +Add on the left menu from the console view. Click on Database. Select "MariaDB (Ephemeral)" and then click "Instantiate Template".
+We'll be using a MariaDB database for this. To deploy the database, click on *+Add* on the left menu from the console view. Click on Database. Select *"MariaDB (Ephemeral)"*.
+
+image::add-maria-db2.png[]
+
+Then, click *"Instantiate Template"*
 
 Replace the following values:
 
@@ -87,7 +91,7 @@ Replace the following values:
 |Database Name:         |xraylabdb
 |=================================
 
-image::instantiate-mariadb.png[instantiate-mariadb, 700]
+image::instantiate-mariadb.png[instantiate-mariadb]
 
 Wait for the database to roll out. You should see the circles in the topology turn dark blue.
 
