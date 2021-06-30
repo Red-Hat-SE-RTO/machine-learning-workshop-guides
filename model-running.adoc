@@ -28,7 +28,7 @@ To log into OpenShift, run the following command in the terminal.
 oc login
 ----
 
-Your login credentials are the same as the others {{ USER_ID }} and {{ OPENSHIFT_USER_PASSWORD }}
+Your login credentials are the same as the other log ins:  *{{ USER_ID }}* and *{{ OPENSHIFT_USER_PASSWORD }}*
 
 You should see something like this (the project names may be different):
 
