@@ -176,7 +176,7 @@ To find these values, return to the {{ CONSOLE_URL }}/topology/ns/{{ USER_ID }}-
 
 image::ceph-nano-secret.png[ceph-nano-secret,700]
 
-WARNING: Do not click the "START" button until after selecting the Notebook Image and Container Size, the next step after the AWS credentials. It is tempting and easy to do. At least one of your workshop leaders had done it.
+WARNING: Do not click the "START" button until after selecting the Notebook Image and Container Size, the next step after the AWS credentials. It is tempting and easy to do. At least one of your workshop leaders has done it.
 
 Copy and paste the Key ID and Access Key into the fields the JupyterHub UI.
 

@@ -76,7 +76,7 @@ All these information will be used on our Grafana Dashboard that displays last t
 
 We'll be using a MariaDB database for this. To deploy the database, click on *+Add* on the left menu from the console view. Click on Database. Select *"MariaDB (Ephemeral)"*.
 
-image::add-maria-db2.png[]
+image::add-maria-db.png[]
 
 Then, click *"Instantiate Template"*
 
