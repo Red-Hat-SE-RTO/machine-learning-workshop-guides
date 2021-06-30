@@ -115,7 +115,7 @@ Connect to the database pod by running the following commands in the Jupyterhub 
 oc rsh $(oc get pods | grep xraylabdb | grep Running | awk '{print $1}')
 ----
 
-Your Terminal prompt is now the one from the database Pod. It should display:
+Your Terminal prompt is nohttps://docs.openshift.com/container-platform/4.7/welcome/index.htmlw the one from the database Pod. It should display:
 [source,bash,subs="{markup-in-source}"]
 ----
 sh-4.2$
@@ -443,10 +443,10 @@ spec:
         resources:
           limits:
             cpu: 600m
-            memory: 600M
+            memory: 2G
           requests:
             cpu: 400m
-            memory: 500M
+            memory: 2G
 ----
 
 In this service definition, we specify that the credentials for the S3 bucket should come from the ceph-nano-credentials secret.
