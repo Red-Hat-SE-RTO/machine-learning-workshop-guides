@@ -20,6 +20,8 @@ cd ~/machine-learning-workshop-labs/notebooks/ && wget http://people.redhat.com/
 
 The dataset is large and may take up to five minutes to download. These images are a smaller set of a much larger collection of X-Ray images available from kaggle (https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia).
 
+TIP: Kaggle is an amazing resource as a starting point for shared datasets, code, courses, and competitions. Click https://www.kaggle.com/learn[here] to see the courses available.
+
 To unpack the data, run the following command in the terminal:
 
 [source,sh,role="copypaste"]
