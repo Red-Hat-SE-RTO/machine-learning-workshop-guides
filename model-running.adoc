@@ -28,6 +28,8 @@ To log into OpenShift, run the following command in the terminal.
 oc login
 ----
 
+Your login credentials are the same as the other log ins:  *{{ USER_ID }}* and *{{ OPENSHIFT_USER_PASSWORD }}*
+
 You should see something like this (the project names may be different):
 
 [source,none]
@@ -74,7 +76,11 @@ Next, we'll deploy the infrastructure that we need for our lab.
 This database will hold some information on the images being uploaded, processed, and anonymized. This is basically their names, the model version with which they are analyzed, and a timestamp.
 All these information will be used on our Grafana Dashboard that displays last ten images from each category.
 
-We'll be using a MariaDB database for this. To deploy the database, click on +Add on the left menu from the console view. Click on Database. Select "MariaDB (Ephemeral)" and then click "Instantiate Template".
+We'll be using a MariaDB database for this. To deploy the database, click on *+Add* on the left menu from the console view. Click on Database. Select *"MariaDB (Ephemeral)"*.
+
+image::add-maria-db.png[]
+
+Then, click *"Instantiate Template"*
 
 Replace the following values:
 
@@ -87,7 +93,7 @@ Replace the following values:
 |Database Name:         |xraylabdb
 |=================================
 
-image::instantiate-mariadb.png[instantiate-mariadb, 700]
+image::instantiate-mariadb.png[instantiate-mariadb]
 
 Wait for the database to roll out. You should see the circles in the topology turn dark blue.
 
@@ -111,7 +117,7 @@ Connect to the database pod by running the following commands in the Jupyterhub 
 oc rsh $(oc get pods | grep xraylabdb | grep Running | awk '{print $1}')
 ----
 
-Your Terminal prompt is now the one from the database Pod. It should display:
+Your Terminal prompt is nohttps://docs.openshift.com/container-platform/4.7/welcome/index.htmlw the one from the database Pod. It should display:
 [source,bash,subs="{markup-in-source}"]
 ----
 sh-4.2$
@@ -256,7 +262,7 @@ To deploy the Image Generator, we'll be building a container image from source. 
 
 [source,sh,role="copypaste"]
 ----
-cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app https://github.com/msolberg/machine-learning-workshop-labs --context-dir=services/image-generator --name=image-generator --strategy=docker
+cd ~/machine-learning-workshop-labs/services/image-generator && oc new-app https://github.com/Red-Hat-SE-RTO/machine-learning-workshop-labs --context-dir=services/image-generator --name=image-generator --strategy=docker
 ----
 
 You should see output similar to the following:
@@ -266,7 +272,7 @@ You should see output similar to the following:
 --> Found Docker image 81c4003 (2 days old) from Docker Hub for "python:3.7"
 
     * An image stream tag will be created as "python:3.7" that will track the source image
-    * A Docker build using source code from https://github.com/msolberg/machine-learning-workshop-labs/#main will be created
+    * A Docker build using source code from https://github.com/Red-Hat-SE-RTO/machine-learning-workshop-labs/#main will be created
       * The resulting image will be pushed to image stream tag "image-generator:latest"
       * Every time "python:3.7" changes a new build will be triggered
     * This image will be deployed in deployment config "image-generator"
@@ -439,10 +445,10 @@ spec:
         resources:
           limits:
             cpu: 600m
-            memory: 600M
+            memory: 2G
           requests:
             cpu: 400m
-            memory: 500M
+            memory: 2G
 ----
 
 In this service definition, we specify that the credentials for the S3 bucket should come from the ceph-nano-credentials secret.

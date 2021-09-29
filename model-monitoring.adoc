@@ -16,7 +16,7 @@ image::plus-icon.png[serverless, 500]
 
 Copy the following `GrafanaDataSource` in `YAML` editor then click on *Create*:
 
-[source,bash,subs="{markup-in-source}",role=execute]
+[source,yaml,role="copypaste"]
 ----
 apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDataSource
@@ -48,7 +48,7 @@ OpenShift Templates allow for the definition of variables, which can be defined 
 
 To process the template and create the GrafanaDashboard object, use the following command from inside the Jupyter terminal:
 
-[source,bash,subs="{markup-in-source}",role=execute]
+[source,sh,role="copypaste"]
 ----
 oc process -f ~/machine-learning-workshop-labs/dashboards/grafana-xraylab-dashboard-template.yaml -p namespace={{ USER_ID }}-notebooks | oc apply -f -
 ----
