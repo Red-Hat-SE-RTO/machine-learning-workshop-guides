@@ -26,7 +26,7 @@ The first step in developing a model for machine learning is often cleansing the
 
 https://jupyter.org/[Jupyter notebooks^] are widely used throughout the data science community to organize, run, and share code. Jupyter supports many programming languages, but the most common languages used in data science are Python and R. This workshops examples will all be in Python, as will the code we use to train and run our model.
 
-In this first exercise, we'll be deploying a Jupyter Hub instance for our user on OpenShift and loading a notebook that performs some basic data cleansing and visualization exercizes on COVID-19 data from the https://covidtracking.com/[COVID Tracking project^].
+In this first exercise, we'll be deploying a Jupyter Hub instance for our user on OpenShift and loading a notebook that performs some basic data cleansing and visualization exercizes on COVID-19 data from the https://dph.georgia.gov/[Georgia Department of Health^].
 
 == Deploy Open Data Hub
 
@@ -53,11 +53,11 @@ image::openshift_landing.png[openshift_landing, 700]
 
 Select "{{ USER_ID }}-notebooks" to enter the namespace for the workshop.
 
-To deploy an instance of ODH, click *From Catalog* on the Add page.
+To deploy an instance of ODH, click on *All Services" under "Developer Catalog" on the Add page.
 
 image::from-catalog.png[from-catalog, 700]
 
-Type in `Data Hub` in the search box, and click on the *Open Data Hub*:
+Type in `datahub` in the search box, and click on the *Open Data Hub*:
 
 image::data-hub-operator.png[data-hub-operator, 700]
 
@@ -184,11 +184,17 @@ image::ceph-nano-secret.png[ceph-nano-secret,700]
 
 WARNING: Do not click the "START" button until after selecting the Notebook Image and Container Size, the next step after the AWS credentials. It is tempting and easy to do. At least one of your workshop leaders has done it.
 
-Copy and paste the Key ID and Access Key into the fields the JupyterHub UI.
+We'll be adding these values as Environment Variables before we spawn our Notebook Image. To do that, click on "Add more variables" under the "Environment variables" section.
+
+image::environment-vars.png[environment-vars.png,700]
+
+Select Custom variable and enter the AWS_ACCESS_KEY_ID for the name and value from the ceph-nano-credentials secret.
+
+Add another Custom variable for the AWS_SECRET_ACCESS_KEY.
 
 image::aws-credentials.png[aws-credentials,700]
 
-On the *Spawner Options* page select the *s2i-tensorflow-notebook:v0.0.2* image from the first dropdown.
+On the *Notebook image* section, select the *Tensorflow Notebook Image* image from the list.
 
 Next, select Container size: *Medium* and click *Start* at the bottom. We'll be using Tensorflow to generate the model in our next step.
 
@@ -230,7 +236,7 @@ image::jupyter-explorer.png[jupyter-explorer,700]
 
 Click on the *"machine-learning-workshop-labs" folder* and click on the *"notebooks" folder*.
 
-Click on *"georgia-covidtracking.ipynb"* to open up the data cleansing notebook.
+Click on *"georgia-covid19.ipynb"* to open up the data cleansing notebook.
 
 Run through the notebook using the "Run" button on the main toolbar:
 
