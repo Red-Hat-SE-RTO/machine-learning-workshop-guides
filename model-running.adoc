@@ -472,7 +472,7 @@ metadata:
 spec:
   consumerGroup: risk-assessment
   bootstrapServers:
-    - my-cluster-kafka-bootstrap:9092
+    - my-cluster-kafka-bootstrap.{{ USER_ID }}-notebooks:9092
   topics:
     - xray-images
   sink:
