@@ -71,7 +71,6 @@ apiVersion: kfdef.apps.kubeflow.org/v1
 kind: KfDef
 metadata:
   name: opendatahub
-  namespace: xray-pipeline
 spec:
   applications:
     - kustomizeConfig:
