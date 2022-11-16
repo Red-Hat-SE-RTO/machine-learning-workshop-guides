@@ -67,84 +67,77 @@ Click on *YAML View*. Replace the YAML in the edit box with the following defini
 
 [source,yaml,role="copypaste"]
 ----
-   # ODH uses the KfDef manifest format to specify what components will be included in the deployment
-   apiVersion: kfdef.apps.kubeflow.org/v1
-   kind: KfDef
-   metadata:
-     # The name of your deployment
-     name: opendatahub
-   # only the components listed in the `KFDef` resource will be deployed:
-   spec:
-     applications:
-       # REQUIRED: This contains all of the common options used by all ODH components
-       - kustomizeConfig:
-           repoRef:
-             name: manifests
-             path: odh-common
-         name: odh-common
-       # Create the SecurityContextConstraint to grant the ceph-nano service account anyuid permissions
-       - kustomizeConfig:
-           repoRef:
-             name: manifests
-             path: ceph/object-storage/scc
-         name: ceph-nano-scc
-       # Deploy ceph-nano for minimal object storage running in a pod
-       - kustomizeConfig:
-           repoRef:
-             name: manifests
-             path: ceph/object-storage/nano
-         name: ceph-nano
-       # Deploy Open Data Hub Grafana
-       - kustomizeConfig:
-           repoRef:
-            name: manifests
-            path: grafana/cluster
-         name: grafana-cluster
-       - kustomizeConfig:
-           repoRef:
-            name: manifests
-            path: grafana/grafana
-         name: grafana-instance
-       # Deploy Open Data Hub Prometheus
-       - kustomizeConfig:
-           repoRef:
-             name: manifests
-             path: prometheus/cluster
-         name: prometheus-cluster
-       - kustomizeConfig:
-           repoRef:
-             name: manifests
-             path: prometheus/operator
-         name: prometheus-operator
-       # Deploy Open Data Hub JupyterHub
-       - kustomizeConfig:
-           parameters:
-             - name: s3_endpoint_url
-               value: "http://ceph-nano-0"
-           repoRef:
-             name: manifests
-             path: jupyterhub/jupyterhub
-         name: jupyterhub
-       # Deploy addtional Open Data Hub Jupyter notebooks
-       - kustomizeConfig:
-           overlays:
-             - additional
-           repoRef:
-             name: manifests
-             path: jupyterhub/notebook-images
-         name: notebook-images
-       # Deploy the dashboard
-       - kustomizeConfig:
-           repoRef:
-             name: manifests
-             path: odh-dashboard
-         name: odh-dashboard
-     # Reference to all of the git repo archives that contain component kustomize manifests
-     repos:
-       - name: kf-manifests
-         uri: 'https://github.com/kubeflow/manifests/tarball/v1.3-branch'
-       - name: manifests
-         uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v1.1.0'
+apiVersion: kfdef.apps.kubeflow.org/v1
+kind: KfDef
+metadata:
+  name: opendatahub
+  namespace: xray-pipeline
+spec:
+  applications:
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: odh-common
+      name: odh-common
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: grafana/cluster
+      name: grafana-cluster
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: grafana/grafana
+      name: grafana-instance
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: prometheus/cluster
+      name: prometheus-cluster
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: prometheus/operator
+      name: prometheus-operator
+    - kustomizeConfig:
+        parameters:
+          - name: s3_endpoint_url
+            value: 'http://ceph-nano-0'
+        repoRef:
+          name: manifests
+          path: jupyterhub/jupyterhub
+      name: jupyterhub
+    - kustomizeConfig:
+        overlays:
+          - additional
+        repoRef:
+          name: manifests
+          path: jupyterhub/notebook-images
+      name: notebook-images
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: ceph/object-storage/scc
+      name: ceph-nano-scc
+    # Deploy ceph-nano for minimal object storage running in a pod
+    - kustomizeConfig:
+        repoRef:
+          name: manifests
+          path: ceph/object-storage/nano
+      name: ceph-nano
+    - kustomizeConfig:
+        overlays:
+          - authentication
+        repoRef:
+          name: manifests
+          path: odh-dashboard
+      name: odh-dashboard
+  repos:
+    - name: kf-manifests
+      uri: >-
+        https://github.com/opendatahub-io/manifests/tarball/v1.5-branch-openshift
+    - name: manifests
+      uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v1.3'
 ----
 
 image::create-kfdef.png[create-kfdef, 700]
