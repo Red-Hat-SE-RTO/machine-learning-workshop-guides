@@ -153,7 +153,9 @@ Note: the little green square in the lower left of the diagram calls out the "ar
 
 === Connect to JupyterHub
 
-Click on the jupyterhub icon and look for the "Routes" section.
+In Open Data Hub, JupyterHub is deployed with a proxy. To connect to it, we'll find the route for the proxy and open it in a new tab.
+
+Click on the "traefik-proxy" icon and look for the "Routes" section.
 
 image::jupyterhub-dc.png[jupyterhub-dc, 700]
 
